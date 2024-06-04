@@ -4,11 +4,13 @@ from .ImageBind import *
 from .ImageBind import data
 from .modeling_llama import LlamaForCausalLM
 from .AnomalyGPT_models import LinearLayer, PromptLearner
-from transformers import StoppingCriteria, StoppingCriteriaList
+from transformers import StoppingCriteria, StoppingCriteriaList, LlamaTokenizer
 from utils.loss import FocalLoss, BinaryDiceLoss
 import kornia as K
-
+from peft import LoraConfig, TaskType, get_peft_model  # Ensure this line is present
 import torch
+import torch.nn as nn
+import os
 from torch.nn.utils import rnn
 
 CLASS_NAMES = ['bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut', 'leather', 'metal nut', 'pill', 'screw', 'tile', 'toothbrush', 'transistor', 'wood', 'zipper', 'object',
