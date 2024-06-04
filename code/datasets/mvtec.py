@@ -6,7 +6,6 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 
-
 from .self_sup_tasks import patch_ex
 
 WIDTH_BOUNDS_PCT = {'bottle':((0.03, 0.4), (0.03, 0.4)), 'cable':((0.05, 0.4), (0.05, 0.4)), 'capsule':((0.03, 0.15), (0.03, 0.4)), 
@@ -15,7 +14,6 @@ WIDTH_BOUNDS_PCT = {'bottle':((0.03, 0.4), (0.03, 0.4)), 'cable':((0.05, 0.4), (
                     'zipper':((0.03, 0.4), (0.03, 0.2)), 
                     'carpet':((0.03, 0.4), (0.03, 0.4)), 'grid':((0.03, 0.4), (0.03, 0.4)), 
                     'leather':((0.03, 0.4), (0.03, 0.4)), 'tile':((0.03, 0.4), (0.03, 0.4)), 'wood':((0.03, 0.4), (0.03, 0.4))}
-
 
 NUM_PATCHES = {'bottle':3, 'cable':3, 'capsule':3, 'hazelnut':3, 'metal_nut':3, 
                'pill':3, 'screw':4, 'toothbrush':3, 'transistor':3, 'zipper':4,
@@ -54,11 +52,9 @@ describles['transistor'] = "This is a photo of a transistor for anomaly detectio
 describles['wood'] = "This is a photo of wood for anomaly detection, which should be brown with patterns, without any damage, flaw, defect, scratch, hole or broken part."
 describles['zipper'] = "This is a photo of a zipper for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
 
-
 class MVtecDataset(Dataset):
     def __init__(self, root_dir: str):
         self.root_dir = root_dir
-        # self.transform = transform
         self.transform = transforms.Resize(
                                 (224, 224), interpolation=transforms.InterpolationMode.BICUBIC
                             )
@@ -116,13 +112,10 @@ class MVtecDataset(Dataset):
         x, mask, centers = patch_ex(x, p, **self_sup_args)
         mask = torch.tensor(mask[None, ..., 0]).float()
         self.prev_idx = index
-        
-
 
         origin = self.norm_transform(origin)
         x = self.norm_transform(x)
 
-   
         if len(centers) > 0:
             position = []
             for center in centers:
@@ -151,52 +144,42 @@ class MVtecDataset(Dataset):
                     position.append('bottom right')
 
             conversation_normal = []
-            conversation_normal.append({"from":"human","value": describles[class_name] + " Is there any anomaly in the image?"})
-            conversation_normal.append({"from":"gpt","value":"No, there is no anomaly in the image."})
-            
-
+            conversation_normal.append({"from": "human", "value": describles[class_name] + " Is there any anomaly in the image?"})
+            conversation_normal.append({"from": "gpt", "value": "No, there is no anomaly in the image."})
 
             conversation_abnormal = []
-            conversation_abnormal.append({"from":"human","value": describles[class_name] + " Is there any anomaly in the image?"})
+            conversation_abnormal.append({"from": "human", "value": describles[class_name] + " Is there any anomaly in the image?"})
 
-
-            
             if len(centers) > 1:
-                abnormal_describe =  "Yes, there are " + str(len(centers)) + " anomalies in the image, they are at the "
+                abnormal_describe = "Yes, there are " + str(len(centers)) + " anomalies in the image, they are at the "
                 for i in range(len(centers)):
                     if i == 0:
                         abnormal_describe += position[i]
-
-                    elif i == 1 and position[i] != position[i-1]:
+                    elif i == 1 and position[i] != position[i - 1]:
                         if i != len(centers) - 1:
                             abnormal_describe += ", "
                             abnormal_describe += position[i]
                         else:
                             abnormal_describe += " and " + position[i] + " of the image."
-                    
-                    elif i == 1 and position[i] == position[i-1]:
+                    elif i == 1 and position[i] == position[i - 1]:
                         if i == len(centers) - 1:
                             abnormal_describe += " of the image."
-
             else:
                 abnormal_describe = "Yes, there is an anomaly in the image, at the " + position[0] + " of the image."
 
-            conversation_abnormal.append({"from":"gpt","value":abnormal_describe})
+            conversation_abnormal.append({"from": "gpt", "value": abnormal_describe})
 
         else:
-            print("no mask")
+            print("No mask")
             conversation_normal = []
-            conversation_normal.append({"from":"human","value":describles[class_name] + " Is there any anomaly in the image?"})
-            conversation_normal.append({"from":"gpt","value":"No, there is no anomaly in the image."})
+            conversation_normal.append({"from": "human", "value": describles[class_name] + " Is there any anomaly in the image?"})
+            conversation_normal.append({"from": "gpt", "value": "No, there is no anomaly in the image."})
 
             conversation_abnormal = conversation_normal
 
         return origin, conversation_normal, x, conversation_abnormal, class_name, mask, img_path
 
-
-
     def collate(self, instances):
-
         images = []
         texts = []
         class_names = []
