@@ -53,12 +53,13 @@ class GrapeLeavesDataset(Dataset):
 
         self.paths = []
         self.x = []
-        
-        # Recursively gather image file paths from all subdirectories
         for root, dirs, files in os.walk(root_dir):
             for file in files:
                 file_path = os.path.join(root, file)
-                if ('png' in file or 'jpg' in file):
+                if "train" in file_path and "non_esca" in file_path and ('png' in file or 'jpg' in file):
+                    self.paths.append(file_path)
+                    self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                elif "ground_truth" in file_path and "esca" in file_path and ('png' in file or 'jpg' in file):
                     self.paths.append(file_path)
                     self.x.append(self.transform(Image.open(file_path).convert('RGB')))
 
