@@ -82,6 +82,8 @@ def main(**args):
     pbar = tqdm(total= 2 * length)    # maximum total number
     current_step = 0
     for epoch_i in tqdm(range(args['epochs'])):
+        if batch is None or batch_sft is None:
+            continue  # Skip if any batch is None
         iter_every_epoch = 0
         for batch, batch_sft in zip(train_iter,train_iter_sft):
             iter_every_epoch += 1
