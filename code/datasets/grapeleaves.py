@@ -53,29 +53,42 @@ class GrapeLeavesDataset(Dataset):
 
         self.paths = []
         self.x = []
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
+        image_count = 0  # Counter for the number of images loaded
         for root, dirs, files in os.walk(root_dir):
             for file in files:
                 file_path = os.path.join(root, file)
-                if "train" in file_path and "non_esca" in file_path and ('png' in file or 'jpg' in file):
+                if "train/good" in file_path and file.lower().endswith(valid_extensions):
                     self.paths.append(file_path)
-                    self.x.append(self.transform(Image.open(file_path).convert('RGB')))
-                elif "ground_truth" in file_path and "esca" in file_path and ('png' in file or 'jpg' in file):
-                    self.paths.append(file_path)
-                    self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                    try:
+                        self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                        image_count += 1  # Increment the counter for each successful image load
+                    except FileNotFoundError:
+                        print(f"File not found: {file_path}")
+                        continue
+                    except Exception as e:
+                        print(f"Error loading image {file_path}: {e}")
+                        continue
 
         self.prev_idx = np.random.randint(len(self.paths))
 
         # Debug statement to check if paths are loaded
-        if len(self.paths) == 0:
+        if image_count == 0:
             print(f"No data found in {self.root_dir}")
         else:
-            print(f"Loaded {len(self.paths)} images from {self.root_dir}")
+            print(f"Loaded {image_count} images from {self.root_dir}")
 
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, index):
-        img_path, x = self.paths[index], self.x[index]
+        img_path = self.paths[index]
+        try:
+            x = self.x[index]
+        except (FileNotFoundError, IndexError):
+            print(f"File not found or index error: {img_path}")
+            return None
+
         class_name = 'grapeleaves'  # Since there's only one class now
 
         self_sup_args = {
@@ -176,6 +189,8 @@ class GrapeLeavesDataset(Dataset):
         masks = []
         img_paths = []
         for instance in instances:
+            if instance is None:
+                continue
             images.append(instance[0])
             texts.append(instance[1])
             class_names.append(instance[4])
