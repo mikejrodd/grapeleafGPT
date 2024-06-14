@@ -40,9 +40,9 @@ prompt_templates = ['a photo of a {}.', 'a photo of the {}.']
 #                         'a photo of the {} for anomaly detection.', 'a photo of a {} for anomaly detection.'
 #                         ]
 objs = ['bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut', 'leather', 'metal nut', 'pill', 'screw', 'tile', 'toothbrush', 'transistor', 'wood', 'zipper', 'object',
-        'candle', 'cashew', 'chewinggum', 'fryum', 'macaroni', 'pcb', 'pipe fryum', 'macaroni1', 'macaroni2','pcb1', 'pcb2', 'pcb3', 'pcb4', 'capsules']
+        'candle', 'cashew', 'chewinggum', 'fryum', 'macaroni', 'pcb', 'pipe fryum', 'macaroni1', 'macaroni2','pcb1', 'pcb2', 'pcb3', 'pcb4', 'capsules', 'grapeleaves']
 
-prompt_sentences = {'grape leaves': 'This is a grape leaf. It should be green and healthy without signs of esca disease.'}
+prompt_sentences = {}
 
 
 for obj in objs:
