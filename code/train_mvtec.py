@@ -70,7 +70,7 @@ def main(**args):
         )
     
     train_data, train_iter, sampler = load_mvtec_dataset(args)
-    train_data_sft, train_iter_sft, sampler = load_sft_dataset(args)
+    train_data_sft, train_iter_sft, sampler_sft = load_sft_dataset(args)
 
     length = args['epochs'] * len(train_data) // args['world_size'] // dschf.config['train_micro_batch_size_per_gpu']
     total_steps = 2 * args['epochs'] * len(train_data) // dschf.config['train_batch_size']
@@ -83,7 +83,7 @@ def main(**args):
     current_step = 0
     for epoch_i in tqdm(range(args['epochs'])):
         iter_every_epoch = 0
-        for batch, batch_sft in zip(train_iter,train_iter_sft):
+        for batch, batch_sft in zip(train_iter, train_iter_sft):
             if batch is None or batch_sft is None:
                 continue  # Skip if any batch is None
             iter_every_epoch += 1
