@@ -14,11 +14,20 @@ import os
 from torch.nn.utils import rnn
 
 CLASS_NAMES = ['bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut', 'leather', 'metal nut', 'pill', 'screw', 'tile', 'toothbrush', 'transistor', 'wood', 'zipper', 'object',
-               'candle', 'cashew', 'chewinggum', 'fryum', 'macaroni', 'pcb', 'pipe fryum']
+               'candle', 'cashew', 'chewinggum', 'fryum', 'macaroni', 'pcb', 'pipe fryum', 'grapeleaves']
 
-prompt_normal = ['{}', 'flawless {}', 'perfect {}', 'unblemished {}', '{} without flaw', '{} without defect', '{} without damage']
-prompt_abnormal = ['damaged {}', 'broken {}', '{} with flaw', '{} with defect', '{} with damage']
 
+prompt_normal = [
+    '{}', 'flawless {}', 'perfect {}', 'unblemished {}', 
+    '{} without flaw', '{} without defect', '{} without damage',
+    'healthy {}', 'green {}', 'vibrant {}'
+]
+
+prompt_abnormal = [
+    'damaged {}', 'broken {}', '{} with flaw', '{} with defect', 
+    '{} with damage', 'diseased {}', 'discolored {}', 
+    '{} with brown spots', '{} with unusual texture'
+]
 prompt_state = [prompt_normal, prompt_abnormal]
 prompt_templates = ['a photo of a {}.', 'a photo of the {}.']
 # prompt_templates = [
@@ -33,7 +42,8 @@ prompt_templates = ['a photo of a {}.', 'a photo of the {}.']
 objs = ['bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut', 'leather', 'metal nut', 'pill', 'screw', 'tile', 'toothbrush', 'transistor', 'wood', 'zipper', 'object',
         'candle', 'cashew', 'chewinggum', 'fryum', 'macaroni', 'pcb', 'pipe fryum', 'macaroni1', 'macaroni2','pcb1', 'pcb2', 'pcb3', 'pcb4', 'capsules']
 
-prompt_sentences = {}
+prompt_sentences = {'grape leaves': 'This is a grape leaf. It should be green and healthy without signs of esca disease.'}
+
 
 for obj in objs:
     prompt_sentence_obj = []
