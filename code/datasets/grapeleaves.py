@@ -54,7 +54,9 @@ class GrapeLeavesDataset(Dataset):
         self.paths = []
         self.x = []
         valid_extensions = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
-        image_count = 0  # Counter for the number of images loaded
+        train_good_count = 0  # Counter for train/good images
+        ground_truth_count = 0  # Counter for ground_truth images
+
         for root, dirs, files in os.walk(root_dir):
             for file in files:
                 file_path = os.path.join(root, file)
@@ -62,7 +64,20 @@ class GrapeLeavesDataset(Dataset):
                     self.paths.append(file_path)
                     try:
                         self.x.append(self.transform(Image.open(file_path).convert('RGB')))
-                        image_count += 1  # Increment the counter for each successful image load
+                        train_good_count += 1  # Increment the counter for each successful image load
+                        print(f"Loaded image from train/good: {file_path}")  # Log the path of the loaded image
+                    except FileNotFoundError:
+                        print(f"File not found: {file_path}")
+                        continue
+                    except Exception as e:
+                        print(f"Error loading image {file_path}: {e}")
+                        continue
+                elif "ground_truth" in file_path and file.lower().endswith(valid_extensions):
+                    # Load ground_truth images, if needed
+                    try:
+                        # Add your ground_truth loading logic here
+                        ground_truth_count += 1  # Increment the counter for each successful image load
+                        print(f"Loaded image from ground_truth: {file_path}")  # Log the path of the loaded image
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
                         continue
@@ -73,10 +88,15 @@ class GrapeLeavesDataset(Dataset):
         self.prev_idx = np.random.randint(len(self.paths))
 
         # Debug statement to check if paths are loaded
-        if image_count == 0:
-            print(f"No data found in {self.root_dir}")
+        if train_good_count == 0:
+            print(f"No train/good data found in {self.root_dir}")
         else:
-            print(f"Loaded {image_count} images from {self.root_dir}")
+            print(f"Loaded {train_good_count} images from train/good in {self.root_dir}")
+
+        if ground_truth_count == 0:
+            print(f"No ground_truth data found in {self.root_dir}")
+        else:
+            print(f"Loaded {ground_truth_count} images from ground_truth in {self.root_dir}")
 
     def __len__(self):
         return len(self.paths)
@@ -202,7 +222,7 @@ class GrapeLeavesDataset(Dataset):
             class_names.append(instance[4])
             masks.append(instance[5])
             img_paths.append(instance[6])
-
+            
         return dict(
             images=images,
             texts=texts,
@@ -210,4 +230,3 @@ class GrapeLeavesDataset(Dataset):
             masks=masks,
             img_paths=img_paths
         )
-
