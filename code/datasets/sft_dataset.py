@@ -75,7 +75,7 @@ class SupervisedDataset(Dataset):
             image = Image.open(image_path).convert('RGB')
             image_tensor = self.norm_transform(image)
         except FileNotFoundError:
-            print(f"File not found: {image_path}")
+            # print(f"File not found: {image_path}")
             return None  # Return None if the file is not found
         return dict(image_paths=image_tensor, output_texts=texts)
 
