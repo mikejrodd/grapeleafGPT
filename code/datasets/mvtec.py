@@ -56,18 +56,16 @@ class MVtecDataset(Dataset):
     def __init__(self, root_dir: str):
         self.root_dir = root_dir
         self.transform = transforms.Resize(
-                                (224, 224), interpolation=transforms.InterpolationMode.BICUBIC
-                            )
+            (224, 224), interpolation=transforms.InterpolationMode.BICUBIC
+        )
         
-        self.norm_transform = transforms.Compose(
-                            [
-                                transforms.ToTensor(),
-                                transforms.Normalize(
-                                    mean=(0.48145466, 0.4578275, 0.40821073),
-                                    std=(0.26862954, 0.26130258, 0.27577711),
-                                ),
-                            ]
-                        )
+        self.norm_transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=(0.48145466, 0.4578275, 0.40821073),
+                std=(0.26862954, 0.26130258, 0.27577711),
+            ),
+        ])
 
         self.paths = []
         self.x = []
@@ -76,31 +74,45 @@ class MVtecDataset(Dataset):
                 file_path = os.path.join(root, file)
                 if "train" in file_path and "good" in file_path and 'png' in file:
                     self.paths.append(file_path)
-                    self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                    try:
+                        self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                    except FileNotFoundError:
+                        print(f"File not found: {file_path}")
+                        continue
 
         self.prev_idx = np.random.randint(len(self.paths))
+
+        if len(self.paths) == 0:
+            print(f"No data found in {self.root_dir}")
+        else:
+            print(f"Loaded {len(self.paths)} images from {self.root_dir}")
 
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, index):
+        img_path = self.paths[index]
+        try:
+            x = self.x[index]
+        except (FileNotFoundError, IndexError):
+            print(f"File not found or index error: {img_path}")
+            return None
 
-        img_path, x = self.paths[index], self.x[index]
         class_name = img_path.split('/')[-4]
 
-        self_sup_args={'width_bounds_pct': WIDTH_BOUNDS_PCT.get(class_name),
-                    'intensity_logistic_params': INTENSITY_LOGISTIC_PARAMS.get(class_name),
-                    'num_patches': 2, #if single_patch else NUM_PATCHES.get(class_name),
-                    'min_object_pct': 0,
-                    'min_overlap_pct': 0.25,
-                    'gamma_params':(2, 0.05, 0.03), 'resize':True, 
-                    'shift':True, 
-                    'same':False, 
-                    'mode':cv2.NORMAL_CLONE,
-                    'label_mode':'logistic-intensity',
-                    'skip_background': BACKGROUND.get(class_name)}
-        if class_name in TEXTURES:
-            self_sup_args['resize_bounds'] = (.5, 2)
+        self_sup_args = {
+            'width_bounds_pct': WIDTH_BOUNDS_PCT.get(class_name),
+            'intensity_logistic_params': INTENSITY_LOGISTIC_PARAMS.get(class_name),
+            'num_patches': 2,
+            'min_object_pct': 0,
+            'min_overlap_pct': 0.25,
+            'gamma_params': (2, 0.05, 0.03), 'resize': True, 
+            'shift': True, 
+            'same': False, 
+            'mode': cv2.NORMAL_CLONE,
+            'label_mode': 'logistic-intensity',
+            'skip_background': BACKGROUND.get(class_name)
+        }
 
         x = np.asarray(x)
         origin = x
@@ -186,6 +198,8 @@ class MVtecDataset(Dataset):
         masks = []
         img_paths = []
         for instance in instances:
+            if instance is None:
+                continue
             images.append(instance[0])
             texts.append(instance[1])
             class_names.append(instance[4])
