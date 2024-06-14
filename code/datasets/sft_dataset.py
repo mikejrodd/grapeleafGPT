@@ -59,6 +59,7 @@ class SupervisedDataset(Dataset):
                 one_caption = one_caption[:2]
             if not one_image_name.endswith('.jpg'):
                 one_image_name += '.jpg'
+            one_image_name = one_image_name.lstrip('0')  # Strip leading zeros
             one_image_path = os.path.join(image_root_path, one_image_name)
             self.image_path_list.append(one_image_path)
             self.caption_list.append(one_caption)
