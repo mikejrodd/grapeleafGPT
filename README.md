@@ -1,5 +1,5 @@
 <p align="center" width="100%">
-<img src="./images/logo.png" alt="AnomalyGPT_logo" style="width: 40%; min-width: 300px; display: block; margin: auto;" />
+<img src="./images/grapeleaf.png" alt="AnomalyGPT_logo" style="width: 40%; min-width: 300px; display: block; margin: auto;" />
 </p>
 
 # AnomalyGPT: Detecting Industrial Anomalies using Large Vision-Language Models
