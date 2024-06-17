@@ -10,8 +10,8 @@ import argparse
 parser = argparse.ArgumentParser("AnomalyGPT", add_help=True)
 # paths
 parser.add_argument("--few_shot", type=bool, default=True)
-parser.add_argument("--k_shot", type=int, default1)
-parser.add_argument("--round", type=int, default3)
+parser.add_argument("--k_shot", type=int, default=1)
+parser.add_argument("--round", type=int, default=3)
 
 command_args = parser.parse_args()
 
@@ -96,9 +96,9 @@ CLASS_NAMES = ['grapeleaves']
 precision = []
 
 for c_name in CLASS_NAMES:
-    normal_img_paths = ["../data/grapeleaves/"+c_name+"/train/good/"+str(command_args.round * 4).zfill(3)+".png", "../data/grapeleaves/"+c_name+"/train/good/"+str(command_args.round * 4 + 1).zfill(3)+".png",
-                        "../data/grapeleaves/"+c_name+"/train/good/"+str(command_args.round * 4 + 2).zfill(3)+".png", "../data/grapeleaves/"+c_name+"/train/good/"+str(command_args.round * 4 + 3).zfill(3)+".png"]
-    normal_img_paths = normal_img_paths[:command_args.k_shot]
+    train_dir = os.path.join(root_dir, "train", "good")
+    normal_img_paths = [os.path.join(train_dir, f) for f in os.listdir(train_dir) if f.endswith(".png")][:command_args.k_shot]
+
     right = 0
     wrong = 0
     p_pred = []
@@ -113,7 +113,7 @@ for c_name in CLASS_NAMES:
                     resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, normal_img_paths, 512, 0.1, 1.0, [], [])
                 else:
                     resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, [], 512, 0.1, 1.0, [], [])
-                is_normal = 'good' in file_path.split('/')[-2]
+                is_normal = 'non_esca' in file_path.split('/')[-2]
 
                 if is_normal:
                     img_mask = Image.fromarray(np.zeros((224, 224)), mode='L')
@@ -163,3 +163,4 @@ for c_name in CLASS_NAMES:
 print("i_AUROC:",torch.tensor(i_auc_list).mean())
 print("p_AUROC:",torch.tensor(p_auc_list).mean())
 print("precision:",torch.tensor(precision).mean())
+
