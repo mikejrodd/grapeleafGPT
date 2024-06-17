@@ -97,8 +97,17 @@ precision = []
 
 for c_name in CLASS_NAMES:
     train_dir = os.path.join(root_dir, "train", "good")
-    normal_img_paths = [os.path.join(train_dir, f) for f in os.listdir(train_dir) if f.endswith(".png")][:command_args.k_shot]
+    if not os.path.exists(train_dir):
+        print(f'Training directory does not exist: {train_dir}')
+        continue
+    
+    normal_img_paths = [os.path.join(train_dir, f) for f in os.listdir(train_dir) if f.lower().endswith((".png", ".jpg"))][:command_args.k_shot]
 
+    # Debugging: print the normal image paths
+    print(f'Normal image paths for {c_name}:', normal_img_paths)
+    if not normal_img_paths:
+        print(f'No images found in training directory: {train_dir}')
+    
     right = 0
     wrong = 0
     p_pred = []
@@ -108,18 +117,22 @@ for c_name in CLASS_NAMES:
     for root, dirs, files in os.walk(root_dir):
         for file in files:
             file_path = os.path.join(root, file)
-            if "test" in file_path and 'png' in file and c_name in file_path:
+            if "test" in file_path and file.lower().endswith(('png', 'jpg')) and ('esca' in file_path or 'good' in file_path):
+                # Debugging: print the test file path
+                # print(f'Testing file: {file_path}')
+                
                 if FEW_SHOT:
                     resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, normal_img_paths, 512, 0.1, 1.0, [], [])
                 else:
                     resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, [], 512, 0.1, 1.0, [], [])
-                is_normal = 'non_esca' in file_path.split('/')[-2]
+                is_normal = 'good' in file_path.split('/')[-2]
 
                 if is_normal:
                     img_mask = Image.fromarray(np.zeros((224, 224)), mode='L')
                 else:
                     mask_path = file_path.replace('test', 'ground_truth')
                     mask_path = mask_path.replace('.png', '_mask.png')
+                    mask_path = mask_path.replace('.JPG', '_mask.png')
                     img_mask = Image.open(mask_path).convert('L')
 
                 img_mask = mask_transform(img_mask)
@@ -143,24 +156,29 @@ for c_name in CLASS_NAMES:
                 else:
                     wrong += 1
 
-    p_pred = np.array(p_pred)
-    p_label = np.array(p_label)
+    if p_pred and p_label:  # Check if there are any predictions and labels
+        p_pred = np.array(p_pred)
+        p_label = np.array(p_label)
 
-    i_pred = np.array(i_pred)
-    i_label = np.array(i_label)
+        i_pred = np.array(i_pred)
+        i_label = np.array(i_label)
 
-    p_auroc = round(roc_auc_score(p_label.ravel(), p_pred.ravel()) * 100,2)
-    i_auroc = round(roc_auc_score(i_label.ravel(), i_pred.ravel()) * 100,2)
+        p_auroc = round(roc_auc_score(p_label.ravel(), p_pred.ravel()) * 100, 2)
+        i_auroc = round(roc_auc_score(i_label.ravel(), i_pred.ravel()) * 100, 2)
     
-    p_auc_list.append(p_auroc)
-    i_auc_list.append(i_auroc)
-    precision.append(100 * right / (right + wrong))
+        p_auc_list.append(p_auroc)
+        i_auc_list.append(i_auroc)
+        precision.append(100 * right / (right + wrong))
 
-    print(c_name, 'right:',right,'wrong:',wrong)
-    print(c_name, "i_AUROC:", i_auroc)
-    print(c_name, "p_AUROC:", p_auroc)
+        print(c_name, 'right:', right, 'wrong:', wrong)
+        print(c_name, "i_AUROC:", i_auroc)
+        print(c_name, "p_AUROC:", p_auroc)
+    else:
+        print(f'No predictions or labels found for {c_name}. Skipping AUROC calculation.')
 
-print("i_AUROC:",torch.tensor(i_auc_list).mean())
-print("p_AUROC:",torch.tensor(p_auc_list).mean())
-print("precision:",torch.tensor(precision).mean())
-
+if i_auc_list and p_auc_list:  # Check if there are any AUROC scores calculated
+    print("i_AUROC:", torch.tensor(i_auc_list).mean())
+    print("p_AUROC:", torch.tensor(p_auc_list).mean())
+    print("precision:", torch.tensor(precision).mean())
+else:
+    print("No AUROC scores calculated. Please check your dataset and paths.")
