@@ -87,9 +87,9 @@ input = "Is there any anomaly in the image?"
 root_dir = '../data/grapeleaves'
 
 mask_transform = transforms.Compose([
-                                transforms.Resize((224, 224)),
-                                transforms.ToTensor()
-                            ])
+    transforms.Resize((224, 224)),
+    transforms.ToTensor()
+])
 
 CLASS_NAMES = ['grapeleaves']
 
@@ -118,9 +118,6 @@ for c_name in CLASS_NAMES:
         for file in files:
             file_path = os.path.join(root, file)
             if "test" in file_path and file.lower().endswith(('png', 'jpg')) and ('esca' in file_path or 'good' in file_path):
-                # Debugging: print the test file path
-                # print(f'Testing file: {file_path}')
-                
                 if FEW_SHOT:
                     resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, normal_img_paths, 512, 0.1, 1.0, [], [])
                 else:
@@ -131,8 +128,11 @@ for c_name in CLASS_NAMES:
                     img_mask = Image.fromarray(np.zeros((224, 224)), mode='L')
                 else:
                     mask_path = file_path.replace('test', 'ground_truth')
-                    mask_path = mask_path.replace('.png', '_mask.png')
-                    mask_path = mask_path.replace('.JPG', '_mask.png')
+                    mask_path = mask_path.replace('.png', '_mask.jpg')
+                    mask_path = mask_path.replace('.jpg', '_mask.jpg')
+                    if not os.path.exists(mask_path):
+                        print(f'Mask not found for {file_path}. Skipping...')
+                        continue
                     img_mask = Image.open(mask_path).convert('L')
 
                 img_mask = mask_transform(img_mask)
