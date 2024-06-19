@@ -9,12 +9,12 @@
 
 ## test_grapeleaves.py performance:
 
-grapeleaves right: 1938 wrong: 1787
-grapeleaves i_AUROC: 62.49
-grapeleaves p_AUROC: 54.27
-i_AUROC: tensor(62.4900, dtype=torch.float64)
-p_AUROC: tensor(54.2700, dtype=torch.float64)
-precision: tensor(52.0268)
+- grapeleaves right: 1938 wrong: 1787
+- grapeleaves i_AUROC: 62.49
+- grapeleaves p_AUROC: 54.27
+- i_AUROC: tensor(62.4900, dtype=torch.float64)
+- p_AUROC: tensor(54.2700, dtype=torch.float64)
+- precision: tensor(52.0268)
 
 
 
