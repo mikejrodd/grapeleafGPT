@@ -2,9 +2,21 @@
 <img src="./images/grapeleaf.png" alt="AnomalyGPT_logo" style="width: 40%; min-width: 300px; display: block; margin: auto;" />
 </p>
 
-# AnomalyGPT: Detecting Industrial Anomalies using Large Vision-Language Models
+# grapeleafGPT: Detecting Esca Disease in Grape Vines using AnomalyGPT Large Vision-Language Model
 
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-red.svg)
+
+
+## test_grapeleaves.py performance:
+
+grapeleaves right: 1938 wrong: 1787
+grapeleaves i_AUROC: 62.49
+grapeleaves p_AUROC: 54.27
+i_AUROC: tensor(62.4900, dtype=torch.float64)
+p_AUROC: tensor(54.2700, dtype=torch.float64)
+precision: tensor(52.0268)
+
+
 
 <p align="left">
    🌐 <a href="https://anomalygpt.github.io" target="_blank">Project Page</a> • 🤗 <a href="https://huggingface.co/spaces/FantasticGNU/AnomalyGPT" target="_blank">Online Demo</a> • 📃 <a href="https://arxiv.org/abs/2308.15366" target="_blank">Paper</a> • 🤖 <a href="https://huggingface.co/FantasticGNU/AnomalyGPT" target="_blank">Model</a> • 📹 <a href="https://www.youtube.com/watch?v=lcxBfy0YnNA" target="_blank">Video</a>
