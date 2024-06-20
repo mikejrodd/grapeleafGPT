@@ -6,6 +6,84 @@
 
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-red.svg)
 
+# GrapeLeafGPT: Anomaly Detection for Esca Disease in Grape Leaves
+
+## Overview
+GrapeLeafGPT is a machine learning project designed to detect Esca-infected grape leaves using an anomaly detection pipeline similar to AnomalyGPT, as described in the paper [AnomalyGPT](https://anomalygpt.github.io/). This project uses grape leaf images from the [Grape Disease Dataset on Kaggle](https://www.kaggle.com/datasets/rm1000/grape-disease-dataset-original) and aims to identify Esca disease in grape leaves as anomalous while considering healthy leaves as normal.
+
+## Background on Esca Disease
+Esca disease is a complex and devastating grapevine trunk disease that affects vineyards worldwide. It manifests through various symptoms on grape leaves, including tiger stripe patterns, chlorosis, and necrosis. Infected vines suffer from reduced yield and grape quality, which severely impacts vineyard management and winemaking.
+
+### Importance of Detecting Esca Disease
+- **Yield Protection**: Early detection of Esca disease can help mitigate its spread, preserving the yield and quality of grape production.
+- **Quality Control**: Ensuring the health of grapevines leads to higher quality grapes, essential for premium wine production.
+- **Cost Efficiency**: Effective management and timely intervention can reduce the economic impact caused by the disease, saving costs on treatments and lost production.
+
+## Models Used
+
+### LLAMA (LLaMA: Large Language Model)
+Developed by Meta, LLaMA is designed for a wide range of NLP tasks. It uses a transformer architecture and has been fine-tuned for specific tasks, including image understanding when combined with vision models. LLaMA is integrated with vision models to enhance its capabilities in visual tasks.
+
+### PandaGPT
+This model extends the capabilities of large pre-trained language models into the visual domain. PandaGPT aligns visual features with text features, enabling it to process and generate responses based on both textual and visual inputs. This alignment allows for effective performance in tasks like image captioning and visual question answering.
+
+### AnomalyGPT
+AnomalyGPT is a novel IAD approach based on LVLM. It eliminates the need for manual threshold adjustments by directly assessing the presence and location of anomalies. AnomalyGPT generates training data by simulating anomalous images and producing corresponding textual descriptions for each image. It employs an image decoder for fine-grained semantic understanding and a prompt learner to fine-tune the LVLM using prompt embeddings. AnomalyGPT supports multi-turn dialogues and exhibits impressive few-shot in-context learning capabilities.
+
+### Key Components of AnomalyGPT
+
+**Image Encoder**: Extracts features from input images using a pre-trained model like ImageBind.
+```python
+from transformers import ImageBindModel
+image_encoder = ImageBindModel.from_pretrained("ImageBind-Huge")
+```
+
+**Text Encoder**: Converts textual descriptions and queries into embeddings using models like LLaMA and PandaGPT.
+```python
+from transformers import LlamaTokenizer, LlamaModel, PandaGPTTokenizer, PandaGPTModel
+text_encoder = LlamaTokenizer.from_pretrained("Llama-7B")
+text_model = LlamaModel.from_pretrained("Llama-7B")
+```
+
+**Prompt Learner**: Enhances the model with additional IAD knowledge using prompt embeddings.
+```python
+class PromptLearner(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(PromptLearner, self).__init__()
+        self.fc = nn.Linear(input_dim, output_dim)
+    
+    def forward(self, x):
+        return self.fc(x)
+```
+
+**Decoder**: Generates pixel-level anomaly localization results.
+```python
+class AnomalyDecoder(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(AnomalyDecoder, self).__init__()
+        self.conv = nn.Conv2d(input_dim, output_dim, kernel_size=1)
+    
+    def forward(self, x):
+        return self.conv(x)
+```
+
+**AnomalyGPT Integration**: Combines the components to detect and localize anomalies in industrial product images.
+```python
+class AnomalyGPT(nn.Module):
+    def __init__(self, image_encoder, text_encoder, prompt_learner, decoder):
+        super(AnomalyGPT, self).__init__()
+        self.image_encoder = image_encoder
+        self.text_encoder = text_encoder
+        self.prompt_learner = prompt_learner
+        self.decoder = decoder
+    
+    def forward(self, image, text):
+        image_features = self.image_encoder(image)
+        text_features = self.text_encoder(text)
+        prompt_features = self.prompt_learner(text_features)
+        anomaly_map = self.decoder(image_features + prompt_features)
+        return anomaly_map
+```
 
 ## test_grapeleaves.py performance:
 
@@ -41,35 +119,7 @@ Improving the localization accuracy, refining the ground truth masks, and possib
 
 ****
 
-<span id='all_catelogue'/>
-
-## Catalogue:
-
-* <a href='#introduction'>1. Introduction</a>
-* <a href='#environment'>2. Running AnomalyGPT Demo</a>
-    * <a href='#install_environment'>2.1 Environment Installation</a>
-    * <a href='#download_imagebind_model'>2.2 Prepare ImageBind Checkpoint</a>
-    * <a href='#download_vicuna_model'>2.3 Prepare Vicuna Checkpoint</a>
-    * <a href='#download_anomalygpt'>2.4 Prepare Delta Weights of AnomalyGPT</a>
-    * <a href='#running_demo'>2.5 Deploying Demo</a>
-* <a href='#train_anomalygpt'>3. Train Your Own AnomalyGPT</a>
-    * <a href='#data_preparation'>3.1 Data Preparation</a>
-    * <a href='#training_configurations'>3.2 Training Configurations</a>
-    * <a href='#model_training'>3.3 Training AnoamlyGPT</a>
-
-* <a href='#examples'>4. Examples</a>
-<!-- * <a href='#results'>5. Results</a> -->
-* <a href='#license'>License</a>
-* <a href='#citation'>Citation</a>
-* <a href='#acknowledgments'>Acknowledgments</a>
-
-****
-
-<span id='introduction'/>
-
 ### 1. Introduction: <a href='#all_catelogue'>[Back to Top]</a>
-
-
 
 <p align="center" width="100%">
 <img src="./images/compare.png" alt="AnomalyGPT_logo" style="width: 80%; min-width: 400px; display: block; margin: auto;" />
@@ -84,201 +134,6 @@ We leverage a pre-trained image encoder and a Large Language Model (LLM) to alig
 
 ****
 
-<span id='environment'/>
-
-### 2. Running AnomalyGPT Demo <a href='#all_catelogue'>[Back to Top]</a>
-
-<span id='install_environment'/>
-
-#### 2.1 Environment Installation
-
-Clone the repository locally:
-
-```
-git clone https://github.com/CASIA-IVA-Lab/AnomalyGPT.git
-```
-
-Install the required packages:
-
-```
-pip install -r requirements.txt
-```
-
-<span id='download_imagebind_model'/>
-
-#### 2.2 Prepare ImageBind Checkpoint:
-
-You can download the pre-trained ImageBind model using [this link](https://dl.fbaipublicfiles.com/imagebind/imagebind_huge.pth). After downloading, put the downloaded file (imagebind_huge.pth) in [[./pretrained_ckpt/imagebind_ckpt/]](./pretrained_ckpt/imagebind_ckpt/) directory. 
-
-<span id='download_vicuna_model'/>
-
-#### 2.3 Prepare Vicuna Checkpoint:
-
-To prepare the pre-trained Vicuna model, please follow the instructions provided [[here]](./pretrained_ckpt#1-prepare-vicuna-checkpoint).
-
-<span id='download_anomalygpt'/>
-
-#### 2.4 Prepare Delta Weights of AnomalyGPT:
-
-We use the pre-trained parameters from [PandaGPT](https://github.com/yxuansu/PandaGPT) to initialize our model. You can get the weights of PandaGPT trained with different strategies in the table below. In our experiments and online demo, we use the Vicuna-7B and `openllmplayground/pandagpt_7b_max_len_1024` due to the limitation of computation resource. Better results are expected if switching to Vicuna-13B.
-
-| **Base Language Model** | **Maximum Sequence Length** |            **Huggingface Delta Weights Address**             |
-| :---------------------: | :-------------------------: | :----------------------------------------------------------: |
-|  Vicuna-7B (version 0)  |             512             | [openllmplayground/pandagpt_7b_max_len_512](https://huggingface.co/openllmplayground/pandagpt_7b_max_len_512) |
-|  Vicuna-7B (version 0)  |            1024             | [openllmplayground/pandagpt_7b_max_len_1024](https://huggingface.co/openllmplayground/pandagpt_7b_max_len_1024) |
-| Vicuna-13B (version 0)  |             256             | [openllmplayground/pandagpt_13b_max_len_256](https://huggingface.co/openllmplayground/pandagpt_13b_max_len_256) |
-| Vicuna-13B (version 0)  |             400             | [openllmplayground/pandagpt_13b_max_len_400](https://huggingface.co/openllmplayground/pandagpt_13b_max_len_400) |
-
-Please put the downloaded 7B/13B delta weights file (pytorch_model.pt) in the [./pretrained_ckpt/pandagpt_ckpt/7b/](./pretrained_ckpt/pandagpt_ckpt/7b/) or [./pretrained_ckpt/pandagpt_ckpt/13b/](./pretrained_ckpt/pandagpt_ckpt/13b/) directory. 
-
-After that, you can download AnomalyGPT weights from the table below.
-
-|                     Setup and Datasets                      | Weights Address |
-| :---------------------------------------------------------: | :-------------------------------: |
-|                  Unsupervised on MVTec-AD                   |          [AnomalyGPT/train_mvtec](https://huggingface.co/FantasticGNU/AnomalyGPT/blob/main/train_mvtec/pytorch_model.pt)           |
-|                    Unsupervised on VisA                     |          [AnomalyGPT/train_visa](https://huggingface.co/FantasticGNU/AnomalyGPT/blob/main/train_visa/pytorch_model.pt)           |
-| Supervised on MVTec-AD, VisA, MVTec-LOCO-AD and CrackForest |          [AnomalyGPT/train_supervised](https://huggingface.co/FantasticGNU/AnomalyGPT/blob/main/train_supervised/pytorch_model.pt)           |
-
-After downloading, put the AnomalyGPT weights in the [./code/ckpt/](./code/ckpt/) directory.
-
-In our [online demo](https://huggingface.co/spaces/FantasticGNU/AnomalyGPT), we use the supervised setting as our default model to attain an enhanced user experience. You can also try other weights locally.
-
-<span id='running_demo'/>
-
-#### 2.5. Deploying Demo
-
-Upon completion of previous steps, you can run the demo locally as
-```bash
-cd ./code/
-python web_demo.py
-```
-
-****
-
-<span id='train_anomalygpt'/>
-
-### 3. Train Your Own AnomalyGPT  <a href='#all_catelogue'>[Back to Top]</a>
-
-**Prerequisites:** Before training the model, making sure the environment is properly installed and the checkpoints of ImageBind, Vicuna and PandaGPT are downloaded. 
-
-<span id='data_preparation'/>
-
-#### 3.1 Data Preparation:
-
-You can download MVTec-AD dataset from [[this link]](https://www.mvtec.com/company/research/datasets/mvtec-ad/downloads) and VisA from [[this link]](https://github.com/amazon-science/spot-diff). You can also download pre-training data of PandaGPT from [[here]](https://huggingface.co/datasets/openllmplayground/pandagpt_visual_instruction_dataset/tree/main). After downloading, put the data in the [[./data]](./data/) directory.
-
-The directory of [[./data]](./data/) should look like:
-
-```
-data
-|---pandagpt4_visual_instruction_data.json
-|---images
-|-----|-- ...
-|---mvtec_anomaly_detection
-|-----|-- bottle
-|-----|-----|----- ground_truth
-|-----|-----|----- test
-|-----|-----|----- train
-|-----|-- capsule
-|-----|-- ...
-|----VisA
-|-----|-- split_csv
-|-----|-----|--- 1cls.csv
-|-----|-----|--- ...
-|-----|-- candle
-|-----|-----|--- Data
-|-----|-----|-----|----- Images
-|-----|-----|-----|--------|------ Anomaly 
-|-----|-----|-----|--------|------ Normal 
-|-----|-----|-----|----- Masks
-|-----|-----|-----|--------|------ Anomaly 
-|-----|-----|--- image_anno.csv
-|-----|-- capsules
-|-----|-----|----- ...
-```
-
-
-
-<span id='training_configurations'/>
-
-#### 3.2 Training Configurations
-
-The table below show the training hyperparameters used in our experiments. The hyperparameters are selected based on the constrain of our computational resources, i.e. 2 x RTX3090 GPUs.
-
-| **Base Language Model** | **Epoch Number** | **Batch Size** | **Learning Rate** | **Maximum Length** |
-| :---------------------: | :--------------: | :------------: | :---------------: | :----------------: |
-|        Vicuna-7B        |        50        |       16       |       1e-3        |        1024        |
-
-
-
-<span id='model_training'/>
-
-#### 3.3 Training AnomalyGPT
-
-To train AnomalyGPT on MVTec-AD dataset, please run the following commands:
-```yaml
-cd ./code
-bash ./scripts/train_mvtec.sh
-```
-
-The key arguments of the training script are as follows:
-* `--data_path`: The data path for the json file `pandagpt4_visual_instruction_data.json`.
-* `--image_root_path`: The root path for training images of PandaGPT.
-* `--imagebind_ckpt_path`: The path of ImageBind checkpoint.
-* `--vicuna_ckpt_path`: The directory that saves the pre-trained Vicuna checkpoints.
-* `--max_tgt_len`: The maximum sequence length of training instances.
-* `--save_path`: The directory which saves the trained delta weights. This directory will be automatically created.
-* `--log_path`: The directory which saves the log. This directory will be automatically created.
-
-Note that the epoch number can be set in the `epochs` argument at [./code/config/openllama_peft.yaml](./code/config/openllama_peft.yaml) file and the learning rate can be set in  [./code/dsconfig/openllama_peft_stage_1.json](./code/dsconfig/openllama_peft_stage_1.json)
-
-
-****
-
-<span id='examples'/>
-
-### 4. Examples
-
-![](./images/demo_1.png)
-<h4 align='center'>An image of concrete with crack. </h4>
-
-****
-![](./images/demo_5.png)
-<h4 align='center'>A crack capsule. </h4>
-
-****
-![](./images/demo_8.png)
-<h4 align='center'>An image of a cut hazelnut. </h4>
-
-****
-![](./images/demo_7.png)
-<h4 align='center'>A damaged bottle. </h4>
-
-****
-![](./images/demo_2.png)
-<h4 align='center'>A photo of normal carpet. </h4>
-
-****
-![](./images/demo_4.png)
-<h4 align='center'>A photo of a piece of wood with defect. </h4>
-
-****
-![](./images/demo_3.png)
-<h4 align='center'>A piece of normal fabric. </h4>
-
-
-****
-
-<span id='license'/>
-
-### License
-
-AnomalyGPT is licensed under the [CC BY-NC-SA 4.0 license](./LICENSE).
-
-
-****
-
-<span id='citation'/>
 
 ### Citation:
 
