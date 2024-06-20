@@ -117,7 +117,7 @@ Improving the localization accuracy, refining the ground truth masks, and possib
 
 ****
 
-### 1. Introduction: <a href='#all_catelogue'>[Back to Top]</a>
+### Overview - AnomalyGPT
 
 <p align="center" width="100%">
 <img src="./images/compare.png" alt="AnomalyGPT_logo" style="width: 80%; min-width: 400px; display: block; margin: auto;" />
