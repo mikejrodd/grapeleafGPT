@@ -39,8 +39,8 @@ parser = argparse.ArgumentParser("AnomalyGPT", add_help=True)
 # paths
 parser.add_argument("--few_shot", type=bool, default=True)
 parser.add_argument("--k_shot", type=int, default=5)  # Set k_shot to 5
-parser.add_argument("--round", type=int, default=3)  # Number of epochs
-parser.add_argument("--batch_size", type=int, default=32)  # Increase batch size
+parser.add_argument("--round", type=int, default=1)  # Number of epochs
+parser.add_argument("--batch_size", type=int, default=64)  # Increase batch size
 command_args = parser.parse_args()
 
 describles = {}
