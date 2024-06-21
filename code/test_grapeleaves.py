@@ -6,12 +6,40 @@ from sklearn.metrics import roc_auc_score
 from PIL import Image
 import numpy as np
 import argparse
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+
+class GrapeLeavesDataset(Dataset):
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.transform = transform
+        self.file_paths = []
+        self.labels = []
+        for root, _, files in os.walk(root_dir):
+            for file in files:
+                if "test" in root and file.lower().endswith(('png', 'jpg', 'jpeg')):
+                    self.file_paths.append(os.path.join(root, file))
+                    if 'esca' in root:
+                        self.labels.append(1)
+                    else:
+                        self.labels.append(0)
+    
+    def __len__(self):
+        return len(self.file_paths)
+    
+    def __getitem__(self, idx):
+        img_path = self.file_paths[idx]
+        image = Image.open(img_path).convert('RGB')
+        label = self.labels[idx]
+        if self.transform:
+            image = self.transform(image)
+        return img_path, image, label
 
 parser = argparse.ArgumentParser("AnomalyGPT", add_help=True)
 # paths
 parser.add_argument("--few_shot", type=bool, default=True)
-parser.add_argument("--k_shot", type=int, default=1)
-parser.add_argument("--round", type=int, default=3)
+parser.add_argument("--k_shot", type=int, default=5)  # Set k_shot to 5
+parser.add_argument("--round", type=int, default=3)  # Number of epochs
+parser.add_argument("--batch_size", type=int, default=16)  # Add batch size argument
 command_args = parser.parse_args()
 
 describles = {}
@@ -42,9 +70,35 @@ model = model.eval().half().cuda()
 
 print(f'[!] init the 7b model over ...')
 
-"""Override Chatbot.postprocess"""
-p_auc_list = []
-i_auc_list = []
+mask_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor()
+])
+
+test_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor()
+])
+
+root_dir = '../data/grapeleaves'  # Ensure root_dir is defined
+
+dataset = GrapeLeavesDataset(root_dir=root_dir, transform=test_transform)
+
+# Create a balanced sampler
+class_count = [sum(dataset.labels), len(dataset.labels) - sum(dataset.labels)]
+weights = 1. / torch.tensor(class_count, dtype=torch.float)
+samples_weights = weights[dataset.labels]
+sampler = WeightedRandomSampler(weights=samples_weights, num_samples=len(samples_weights), replacement=True)
+
+dataloader = DataLoader(dataset, batch_size=command_args.batch_size, sampler=sampler)
+
+CLASS_NAMES = ['grapeleaves']  # Move this to the correct scope
+
+def log_metrics(epoch, batch_idx, right, wrong, p_auc_list, i_auc_list):
+    precision = 100 * right / (right + wrong) if (right + wrong) > 0 else 0
+    p_auroc = np.mean(p_auc_list) if p_auc_list else 0
+    i_auroc = np.mean(i_auc_list) if i_auc_list else 0
+    print(f'Epoch: {epoch}, Batch: {batch_idx}, Precision: {precision:.2f}, p_AUROC: {p_auroc:.2f}, i_AUROC: {i_auroc:.2f}')
 
 def predict(
     input, 
@@ -83,59 +137,60 @@ def predict(
     return response, pixel_output
 
 input = "Is there any anomaly in the image?"
-root_dir = '../data/grapeleaves'
 
-mask_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor()
-])
+# Initialize metrics lists
+p_auc_list = []
+i_auc_list = []
+precision_list = []
 
-CLASS_NAMES = ['grapeleaves']
+for epoch in range(command_args.round):
+    for c_name in CLASS_NAMES:
+        train_dir = os.path.join(root_dir, "train", "good")
+        if not os.path.exists(train_dir):
+            print(f'Training directory does not exist: {train_dir}')
+            continue
+        
+        normal_img_paths = [os.path.join(train_dir, f) for f in os.listdir(train_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))][:command_args.k_shot]
 
-precision = []
+        # Debugging: print the normal image paths
+        print(f'Normal image paths for {c_name}:', normal_img_paths)
+        if not normal_img_paths:
+            print(f'No images found in training directory: {train_dir}')
+        
+        right = 0
+        wrong = 0
+        p_pred = []
+        p_label = []
+        i_pred = []
+        i_label = []
 
-for c_name in CLASS_NAMES:
-    train_dir = os.path.join(root_dir, "train", "good")
-    if not os.path.exists(train_dir):
-        print(f'Training directory does not exist: {train_dir}')
-        continue
-    
-    normal_img_paths = [os.path.join(train_dir, f) for f in os.listdir(train_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))][:command_args.k_shot]
+        for batch_idx, batch in enumerate(dataloader):
+            img_paths, images, labels = batch
+            
+            batch_p_preds = []
+            batch_p_labels = []
+            batch_i_preds = []
+            batch_i_labels = []
 
-    # Debugging: print the normal image paths
-    print(f'Normal image paths for {c_name}:', normal_img_paths)
-    if not normal_img_paths:
-        print(f'No images found in training directory: {train_dir}')
-    
-    right = 0
-    wrong = 0
-    p_pred = []
-    p_label = []
-    i_pred = []
-    i_label = []
-    for root, dirs, files in os.walk(root_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            if "test" in file_path and file.lower().endswith(('png', 'jpg', 'jpeg')) and ('esca' in file_path or 'good' in file_path):
+            for img_path, image, label in zip(img_paths, images, labels):
                 if FEW_SHOT:
-                    resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, normal_img_paths, 512, 0.1, 1.0, [], [])
+                    resp, anomaly_map = predict(describles[c_name] + ' ' + input, img_path, normal_img_paths, 512, 0.1, 1.0, [], [])
                 else:
-                    resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, [], 512, 0.1, 1.0, [], [])
-                is_normal = 'good' in file_path.split('/')[-2]
-
-                if is_normal:
+                    resp, anomaly_map = predict(describles[c_name] + ' ' + input, img_path, [], 512, 0.1, 1.0, [], [])
+                
+                if label == 0:
                     img_mask = Image.fromarray(np.zeros((224, 224)), mode='L')
                 else:
-                    mask_path = file_path.replace('test', 'ground_truth')
+                    mask_path = img_path.replace('test', 'ground_truth')
                     mask_path = mask_path.replace('.png', '_mask.png')
                     mask_path = mask_path.replace('.jpg', '_mask.png')
                     mask_path = mask_path.replace('.jpeg', '_mask.png')
                     if not os.path.exists(mask_path):
-                        mask_path = file_path.replace('.png', '_mask.jpg')
-                        mask_path = file_path.replace('.jpg', '_mask.jpg')
-                        mask_path = file_path.replace('.jpeg', '_mask.jpg')
+                        mask_path = img_path.replace('.png', '_mask.jpg')
+                        mask_path = img_path.replace('.jpg', '_mask.jpg')
+                        mask_path = img_path.replace('.jpeg', '_mask.jpg')
                     if not os.path.exists(mask_path):
-                        print(f'Mask not found for {file_path}. Skipping...')
+                        print(f'Mask not found for {img_path}. Skipping...')
                         continue
                     img_mask = Image.open(mask_path).convert('L')
 
@@ -145,44 +200,67 @@ for c_name in CLASS_NAMES:
                 
                 anomaly_map = anomaly_map.reshape(224, 224).detach().cpu().numpy()
 
-                p_label.append(img_mask)
-                p_pred.append(anomaly_map)
+                batch_p_labels.append(img_mask)
+                batch_p_preds.append(anomaly_map)
 
-                i_label.append(1 if not is_normal else 0)
-                i_pred.append(anomaly_map.max())
+                batch_i_labels.append(label.item())  # Ensure label is converted to a scalar
+                batch_i_preds.append(anomaly_map.max().item())  # Ensure anomaly_map.max() is a scalar
 
-                position = []
-
-                if 'good' not in file_path and 'Yes' in resp:
+                if label == 1 and 'Yes' in resp:
                     right += 1
-                elif 'good' in file_path and 'No' in resp:
+                elif label == 0 and 'No' in resp:
                     right += 1
                 else:
                     wrong += 1
 
-    if p_pred and p_label:  # Check if there are any predictions and labels
-        p_pred = np.array(p_pred)
-        p_label = np.array(p_label)
+            p_label.extend(batch_p_labels)
+            p_pred.extend(batch_p_preds)
+            i_label.extend(batch_i_labels)
+            i_pred.extend(batch_i_preds)
 
-        i_pred = np.array(i_pred)
-        i_label = np.array(i_label)
+            if batch_idx % 2 == 0:
+                if p_label and p_pred:  # Check if lists are not empty
+                    p_auroc = round(roc_auc_score(np.array(p_label).ravel(), np.array(p_pred).ravel()) * 100, 2)
+                else:
+                    p_auroc = 0
 
-        p_auroc = round(roc_auc_score(p_label.ravel(), p_pred.ravel()) * 100, 2)
-        i_auroc = round(roc_auc_score(i_label.ravel(), i_pred.ravel()) * 100, 2)
-    
-        p_auc_list.append(p_auroc)
-        i_auc_list.append(i_auroc)
-        precision.append(100 * right / (right + wrong))
+                if len(set(i_label)) > 1:  # Check if there are both classes in i_label
+                    i_auroc = round(roc_auc_score(np.array(i_label), np.array(i_pred)) * 100, 2)
+                else:
+                    i_auroc = 0
 
-        print(c_name, 'right:', right, 'wrong:', wrong)
-        print(c_name, "i_AUROC:", i_auroc)
-        print(c_name, "p_AUROC:", p_auroc)
-    else:
-        print(f'No predictions or labels found for {c_name}. Skipping AUROC calculation.')
+                p_auc_list.append(p_auroc)
+                i_auc_list.append(i_auroc)
+                log_metrics(epoch, batch_idx, right, wrong, p_auc_list, i_auc_list)
+                print(f'Batch index: {batch_idx}, right: {right}, wrong: {wrong}, p_auroc: {p_auroc}, i_auroc: {i_auroc}')  # Debugging print
+                print(f'i_label: {i_label}, i_pred: {i_pred}')  # Log i_label and i_pred
+
+        if p_pred and p_label:  # Check if there are any predictions and labels
+            p_pred = np.array(p_pred)
+            p_label = np.array(p_label)
+
+            i_pred = np.array(i_pred)
+            i_label = np.array(i_label)
+
+            p_auroc = round(roc_auc_score(p_label.ravel(), p_pred.ravel()) * 100, 2)
+            if len(set(i_label)) > 1:  # Check if there are both classes in i_label
+                i_auroc = round(roc_auc_score(i_label, i_pred) * 100, 2)
+            else:
+                i_auroc = 0
+        
+            p_auc_list.append(p_auroc)
+            i_auc_list.append(i_auroc)
+            precision_list.append(100 * right / (right + wrong))
+
+            print(c_name, 'right:', right, 'wrong:', wrong)
+            print(c_name, "i_AUROC:", i_auroc)
+            print(c_name, "p_AUROC:", p_auroc)
+        else:
+            print(f'No predictions or labels found for {c_name}. Skipping AUROC calculation.')
 
 if i_auc_list and p_auc_list:  # Check if there are any AUROC scores calculated
-    print("i_AUROC:", torch.tensor(i_auc_list).mean())
-    print("p_AUROC:", torch.tensor(p_auc_list).mean())
-    print("precision:", torch.tensor(precision).mean())
+    print("i_AUROC:", torch.tensor(i_auc_list).mean().item())
+    print("p_AUROC:", torch.tensor(p_auc_list).mean().item())
+    print("precision:", torch.tensor(precision_list).mean().item())
 else:
     print("No AUROC scores calculated. Please check your dataset and paths.")
