@@ -65,7 +65,7 @@ class GrapeLeavesDataset(Dataset):
                     try:
                         self.x.append(self.transform(Image.open(file_path).convert('RGB')))
                         train_good_count += 1  # Increment the counter for each successful image load
-                        print(f"Loaded image from train/good: {file_path}")  # Log the path of the loaded image
+                        # print(f"Loaded image from train/good: {file_path}") 
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
                         continue
@@ -77,7 +77,7 @@ class GrapeLeavesDataset(Dataset):
                     try:
                         # Add your ground_truth loading logic here
                         ground_truth_count += 1  # Increment the counter for each successful image load
-                        print(f"Loaded image from ground_truth: {file_path}")  # Log the path of the loaded image
+                        # print(f"Loaded image from ground_truth: {file_path}")
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
                         continue
