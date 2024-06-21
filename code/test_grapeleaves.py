@@ -7,6 +7,7 @@ from PIL import Image
 import numpy as np
 import argparse
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+from torch.cuda.amp import autocast
 
 class GrapeLeavesDataset(Dataset):
     def __init__(self, root_dir, transform=None):
@@ -39,7 +40,7 @@ parser = argparse.ArgumentParser("AnomalyGPT", add_help=True)
 parser.add_argument("--few_shot", type=bool, default=True)
 parser.add_argument("--k_shot", type=int, default=5)  # Set k_shot to 5
 parser.add_argument("--round", type=int, default=3)  # Number of epochs
-parser.add_argument("--batch_size", type=int, default=16)  # Add batch size argument
+parser.add_argument("--batch_size", type=int, default=32)  # Increase batch size
 command_args = parser.parse_args()
 
 describles = {}
@@ -90,7 +91,7 @@ weights = 1. / torch.tensor(class_count, dtype=torch.float)
 samples_weights = weights[dataset.labels]
 sampler = WeightedRandomSampler(weights=samples_weights, num_samples=len(samples_weights), replacement=True)
 
-dataloader = DataLoader(dataset, batch_size=command_args.batch_size, sampler=sampler)
+dataloader = DataLoader(dataset, batch_size=command_args.batch_size, sampler=sampler, num_workers=4)  # Increase num_workers
 
 CLASS_NAMES = ['grapeleaves']  # Move this to the correct scope
 
@@ -121,18 +122,19 @@ def predict(
     else:
         prompt_text += f' Human: {input}'
 
-    response, pixel_output = model.generate({
-        'prompt': prompt_text,
-        'image_paths': [image_path] if image_path else [],
-        'audio_paths': [],
-        'video_paths': [],
-        'thermal_paths': [],
-        'normal_img_paths': normal_img_path if normal_img_path else [],
-        'top_p': top_p,
-        'temperature': temperature,
-        'max_tgt_len': max_length,
-        'modality_embeds': modality_cache
-    })
+    with autocast():
+        response, pixel_output = model.generate({
+            'prompt': prompt_text,
+            'image_paths': [image_path] if image_path else [],
+            'audio_paths': [],
+            'video_paths': [],
+            'thermal_paths': [],
+            'normal_img_paths': normal_img_path if normal_img_path else [],
+            'top_p': top_p,
+            'temperature': temperature,
+            'max_tgt_len': max_length,
+            'modality_embeds': modality_cache
+        })
 
     return response, pixel_output
 
