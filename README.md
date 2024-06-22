@@ -85,10 +85,13 @@ class AnomalyGPT(nn.Module):
 
 ## test_grapeleaves.py performance:
 
-- grapeleaves right: 2400 wrong: 1325
-- grapeleaves i_AUROC: 62.49
-- grapeleaves p_AUROC: 54.27
-- precision: 64.43
+- grapeleaves right: 2886 wrong: 839
+- grapeleaves i_AUROC: 68.2
+- grapeleaves p_AUROC: 58.01
+- i_AUROC: 66.7494
+- p_AUROC: 57.8332
+- precision: 77.4765
+- accuracy: 77.49
 
 ## Performance Assessment:
 
