@@ -9,7 +9,7 @@
 ## Overview
 GrapeLeafGPT is a machine learning project designed to detect Esca-infected grape leaves using an anomaly detection pipeline similar to [AnomalyGPT](https://anomalygpt.github.io/). This project uses grape leaf images from the [Grape Disease Dataset on Kaggle](https://www.kaggle.com/datasets/rm1000/grape-disease-dataset-original) and aims to identify Esca disease in grape leaves as anomalous while considering healthy leaves as normal.
 
-## Model Performanceon Test Images:
+## Model Performance on Test Images:
 
 - grapeleaves right: 2886 wrong: 839
 - i_AUROC: 66.75
