@@ -9,6 +9,14 @@
 ## Overview
 GrapeLeafGPT is a machine learning project designed to detect Esca-infected grape leaves using an anomaly detection pipeline similar to [AnomalyGPT](https://anomalygpt.github.io/). This project uses grape leaf images from the [Grape Disease Dataset on Kaggle](https://www.kaggle.com/datasets/rm1000/grape-disease-dataset-original) and aims to identify Esca disease in grape leaves as anomalous while considering healthy leaves as normal.
 
+## Model Performance:
+
+- grapeleaves right: 2886 wrong: 839
+- i_AUROC: 66.75
+- p_AUROC: 57.83
+- precision: 77.48
+- accuracy: 77.42
+
 ## Background on Esca Disease
 Esca disease is a complex and devastating grapevine trunk disease that affects vineyards worldwide. It manifests through various symptoms on grape leaves, including tiger stripe patterns, chlorosis, and necrosis. Infected vines suffer from reduced yield and grape quality, which severely impacts vineyard management and winemaking.
 
@@ -83,19 +91,9 @@ class AnomalyGPT(nn.Module):
         return anomaly_map
 ```
 
-## test_grapeleaves.py performance:
-
-- grapeleaves right: 2886 wrong: 839
-- grapeleaves i_AUROC: 68.2
-- grapeleaves p_AUROC: 58.01
-- i_AUROC: 66.7494
-- p_AUROC: 57.8332
-- precision: 77.4765
-- accuracy: 77.49
-
 ## Performance Assessment:
 
-The performance of AnomalyGPT in detecting esca disease in grape leaves was suboptimal, as indicated by the metrics obtained: a precision of 64.43%, an i_AUROC of 62.49, and a p_AUROC of 54.27. These results suggest significant challenges in the model's ability to accurately identify and localize anomalies specific to Esca disease.
+The performance of AnomalyGPT in detecting esca disease in grape leaves was suboptimal, as indicated by the metrics obtained: an accuracy of 77.42%, an i_AUROC of 66.75, and a p_AUROC of 57.83. These results suggest significant challenges in the model's ability to accurately identify and localize anomalies specific to Esca disease.
 
 A key aspect of AnomalyGPT's functioning is its reliance on precise localization of anomalies. The model generates pixel-level anomaly maps to highlight potential diseased areas in the leaves. These maps are then compared against ground truth masks to evaluate the model's performance. High localization accuracy is critical because any error in these pixel-level predictions can drastically affect the overall performance metrics, including precision and AUROC scores.
 
