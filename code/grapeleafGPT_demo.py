@@ -163,11 +163,8 @@ def predict(
 def reset_user_input():
     return gr.update(value='')
 
-
 def reset_state():
-    return gr.update(value=''), None, None, [], [], [], PILImage.open('ffffff.png')
-
-
+    return gr.update(value=''), None, [], [], [], PILImage.open('ffffff.png')
 
 with gr.Blocks() as demo:
     gr.HTML("""<h1 align="center">Demo of AnomalyGPT</h1>""")
@@ -176,22 +173,24 @@ with gr.Blocks() as demo:
         with gr.Column(scale=1):
             with gr.Row(scale=3):
                 image_path = gr.Image(type="filepath", label="Query Image", value=None)
-            with gr.Row(scale=3):
-                normal_img_path = gr.Image(type="filepath", label="Normal Image (optional)", value=None)
             with gr.Row():
                 max_length = gr.Slider(0, 512, value=512, step=1.0, label="Maximum length", interactive=True)
             with gr.Row():
+                gr.Markdown("Maximum number of tokens to generate")
+            with gr.Row():
                 top_p = gr.Slider(0, 1, value=0.01, step=0.01, label="Top P", interactive=True)
             with gr.Row():
+                gr.Markdown("Controls diversity. 0.1 is more focused, 1.0 is more diverse")
+            with gr.Row():
                 temperature = gr.Slider(0, 1, value=1.0, step=0.01, label="Temperature", interactive=True)
-
+            with gr.Row():
+                gr.Markdown("Controls randomness. Lower values are more deterministic, higher values are more creative")
 
         with gr.Column(scale=3):
             with gr.Row():
                 with gr.Column(scale=6):
                     chatbot = gr.Chatbot().style(height=415)
                 with gr.Column(scale=4):
-                    # gr.Image(output)
                     image_output = gr.Image(interactive=False, label="Localization Output", every=1.0, shape=[224,224], type='pil',value=PILImage.open('ffffff.png'))
             with gr.Row():
                 user_input = gr.Textbox(show_label=False, placeholder="Input...", lines=10).style(container=False)
@@ -208,7 +207,7 @@ with gr.Blocks() as demo:
         predict, [
             user_input, 
             image_path, 
-            normal_img_path, 
+            None,  # Removed normal_img_path
             chatbot, 
             max_length, 
             top_p, 
@@ -228,13 +227,10 @@ with gr.Blocks() as demo:
     emptyBtn.click(reset_state, outputs=[
         user_input,
         image_path,
-        normal_img_path,
         chatbot, 
         history, 
         modality_cache,
         image_output
     ], show_progress=True)
 
-
 demo.queue().launch(share=True)
-
