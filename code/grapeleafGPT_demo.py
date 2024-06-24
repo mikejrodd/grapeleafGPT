@@ -167,24 +167,24 @@ def reset_state():
     return gr.update(value=''), None, [], [], [], PILImage.open('ffffff.png')
 
 with gr.Blocks() as demo:
-    gr.HTML("""<h1 align="center">Demo of AnomalyGPT</h1>""")
+    gr.HTML("""<h1 align="center">Demo of grapeleafGPT</h1>""")
 
     with gr.Row():
         with gr.Column(scale=1):
             with gr.Row(scale=3):
-                image_path = gr.Image(type="filepath", label="Query Image", value=None)
+                image_path = gr.Image(type="filepath", label="Grape Leaf Image", value=None)
             with gr.Row():
                 max_length = gr.Slider(0, 512, value=512, step=1.0, label="Maximum length", interactive=True)
             with gr.Row():
-                gr.Markdown("Maximum number of tokens to generate")
+                gr.Markdown("Higher values allow for longer responses, but can also increase the risk of generating irrelevant or overly verbose outputs. Lower values can make the responses more concise but may cut off important information.")
             with gr.Row():
                 top_p = gr.Slider(0, 1, value=0.01, step=0.01, label="Top P", interactive=True)
             with gr.Row():
-                gr.Markdown("Controls diversity. 0.1 is more focused, 1.0 is more diverse")
+                gr.Markdown("Lower values make the model more conservative, generating more predictable and repetitive responses. Higher values increase diversity, allowing the model to generate more creative and varied responses.")
             with gr.Row():
                 temperature = gr.Slider(0, 1, value=1.0, step=0.01, label="Temperature", interactive=True)
             with gr.Row():
-                gr.Markdown("Controls randomness. Lower values are more deterministic, higher values are more creative")
+                gr.Markdown("Controls randomness of responses. Lower values are more deterministic, and higher values are more creative.")
 
         with gr.Column(scale=3):
             with gr.Row():
@@ -193,7 +193,7 @@ with gr.Blocks() as demo:
                 with gr.Column(scale=4):
                     image_output = gr.Image(interactive=False, label="Localization Output", every=1.0, shape=[224,224], type='pil',value=PILImage.open('ffffff.png'))
             with gr.Row():
-                user_input = gr.Textbox(show_label=False, placeholder="Input...", lines=10).style(container=False)
+                user_input = gr.Textbox(show_label=False, placeholder="User text input...", lines=10).style(container=False)
             with gr.Row():
                 with gr.Column(scale=2):
                     submitBtn = gr.Button("Submit", variant="primary")
