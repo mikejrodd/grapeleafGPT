@@ -1,8 +1,8 @@
+# grapeleafGPT: Detecting Esca Disease in Grape Vines using AnomalyGPT Large Vision-Language Model
+
 <p align="center" width="100%">
 <img src="./images/grapeleaf.png" alt="AnomalyGPT_logo" style="width: 40%; min-width: 300px; display: block; margin: auto;" />
 </p>
-
-# grapeleafGPT: Detecting Esca Disease in Grape Vines using AnomalyGPT Large Vision-Language Model
 
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-red.svg)
 
