@@ -6,7 +6,7 @@ The language decoder of AnomalyGPT is based on Vicuna version 0. Given the distr
 
 Precombined weights used for grapeleafGPT were downloaded here: https://huggingface.co/dontito/llama-7b-hf-v0/tree/main
 
-**As of this project, Meta is not responded to the below form**
+**As of this project, Meta is not responding to the below form**
 
 * Request the weights of LLaMA from Meta using [this form](https://docs.google.com/forms/d/e/1FAIpQLSfqNECQnMkycAp2jP4Z9TFX0cGR4uf7b_fBxjY_OjhJILlKGA/viewform).
 * After obtaining the weights of a specific LLaMA (e.g. 7B, 13B), following [instructions](https://huggingface.co/docs/transformers/main/model_doc/llama) provided by Huggingface to convert it into Huggingface format. 
