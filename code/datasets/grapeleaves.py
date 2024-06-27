@@ -53,9 +53,10 @@ class GrapeLeavesDataset(Dataset):
 
         self.paths = []
         self.x = []
+        self.masks = []
         valid_extensions = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
-        train_good_count = 0  # Counter for train/good images
-        ground_truth_count = 0  # Counter for ground_truth images
+        train_good_count = 0  
+        ground_truth_count = 0  
 
         for root, dirs, files in os.walk(root_dir):
             for file in files:
@@ -64,7 +65,7 @@ class GrapeLeavesDataset(Dataset):
                     self.paths.append(file_path)
                     try:
                         self.x.append(self.transform(Image.open(file_path).convert('RGB')))
-                        train_good_count += 1  # Increment the counter for each successful image load
+                        train_good_count += 1  
                         # print(f"Loaded image from train/good: {file_path}") 
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
@@ -73,10 +74,10 @@ class GrapeLeavesDataset(Dataset):
                         print(f"Error loading image {file_path}: {e}")
                         continue
                 elif "ground_truth" in file_path and file.lower().endswith(valid_extensions):
-                    # Load ground_truth images, if needed
                     try:
-                        # Add your ground_truth loading logic here
-                        ground_truth_count += 1  # Increment the counter for each successful image load
+                        mask = Image.open(file_path).convert('L')  
+                        self.masks.append(self.transform(mask))  
+                        ground_truth_count += 1  
                         # print(f"Loaded image from ground_truth: {file_path}")
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
@@ -109,7 +110,7 @@ class GrapeLeavesDataset(Dataset):
             print(f"File not found or index error: {img_path}")
             return None
 
-        class_name = 'grapeleaves'  # Since there's only one class now
+        class_name = 'grapeleaves' 
 
         self_sup_args = {
             'width_bounds_pct': WIDTH_BOUNDS_PCT.get(class_name),
