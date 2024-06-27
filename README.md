@@ -11,11 +11,10 @@ GrapeLeafGPT is a machine learning project designed to detect Esca-infected grap
 
 ## Model Performance on Test Images:
 
-- grapeleaves right: 2886 wrong: 839
-- i_AUROC: 66.75
-- p_AUROC: 57.83
-- precision: 77.48
-- accuracy: 77.42
+- grapeleaves right: 1437 wrong: 2288
+- i_AUROC: 67.25
+- p_AUROC: 58.69
+- precision: 38.58
 
 ## Background on Esca Disease
 Esca disease is a complex and devastating grapevine trunk disease that affects vineyards worldwide. It manifests through various symptoms on grape leaves, including tiger stripe patterns, chlorosis, and necrosis. Infected vines suffer from reduced yield and grape quality, which severely impacts vineyard management and winemaking.
@@ -93,7 +92,7 @@ class AnomalyGPT(nn.Module):
 
 ## Performance Assessment:
 
-The performance of AnomalyGPT in detecting esca disease in grape leaves was suboptimal, as indicated by the metrics obtained: an accuracy of 77.42%, an i_AUROC of 66.75, and a p_AUROC of 57.83. These results suggest significant challenges in the model's ability to accurately identify and localize anomalies specific to Esca disease.
+The performance of AnomalyGPT in detecting esca disease in grape leaves was suboptimal, as indicated by the metrics obtained: an accuracy of 38%, an i_AUROC of 67.25, and a p_AUROC of 58.69. These results suggest significant challenges in the model's ability to accurately identify and localize anomalies specific to Esca disease.
 
 A key aspect of AnomalyGPT's functioning is its reliance on precise localization of anomalies. The model generates pixel-level anomaly maps to highlight potential diseased areas in the leaves. These maps are then compared against ground truth masks to evaluate the model's performance. High localization accuracy is critical because any error in these pixel-level predictions can drastically affect the overall performance metrics, including precision and AUROC scores.
 
