@@ -3,6 +3,11 @@
 The language decoder of AnomalyGPT is based on Vicuna version 0. Given the distribution license of LLaMA, you need to restore the weights of Vicuna manually. To restore the weights, please follow the instructions below. In the following, we showcase how to restore the 7B version of Vicuna v0. To obtain the 13B version of Vicuna, you can take similar procedures. 
 
 ## 1.1. Obtain LLaMA Weights:
+
+Precombined weights used for grapeleafGPT were downloaded here: https://huggingface.co/dontito/llama-7b-hf-v0/tree/main
+
+
+
 * Request the weights of LLaMA from Meta using [this form](https://docs.google.com/forms/d/e/1FAIpQLSfqNECQnMkycAp2jP4Z9TFX0cGR4uf7b_fBxjY_OjhJILlKGA/viewform).
 * After obtaining the weights of a specific LLaMA (e.g. 7B, 13B), following [instructions](https://huggingface.co/docs/transformers/main/model_doc/llama) provided by Huggingface to convert it into Huggingface format. 
 
