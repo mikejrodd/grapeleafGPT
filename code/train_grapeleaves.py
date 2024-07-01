@@ -15,8 +15,8 @@ def parser_args():
     parser.add_argument('--delta_ckpt_path', type=str) # the delta parameters trained in stage 1
     parser.add_argument('--max_tgt_len', type=int) # the maximum sequence length
     parser.add_argument('--stage', type=int) # the maximum sequence length
-    parser.add_argument('--data_path', type=str) # the path to training data
-    parser.add_argument('--image_root_path', type=str) # the root path for images
+    parser.add_argument('--data_path', type=str) # the maximum sequence length
+    parser.add_argument('--image_root_path', type=str) # the maximum sequence length
 
     return parser.parse_args()
 
@@ -49,7 +49,7 @@ def config_env(args):
 def build_directory(path):
     if os.path.exists(path):
         pass
-    else:
+    else: # recursively construct directory
         os.makedirs(path, exist_ok=True)
 
 def main(**args):
@@ -78,6 +78,7 @@ def main(**args):
     agent = load_model(args)
     torch.distributed.barrier()
 
+    # begin to train
     pbar = tqdm(total= 2 * length)    # maximum total number
     current_step = 0
     for epoch_i in tqdm(range(args['epochs'])):
@@ -100,6 +101,10 @@ def main(**args):
             )
             del batch_sft
             current_step += 1
+            # torch.cuda.empty_cache()
+            # if iter_every_epoch % 1000 == 0:
+            #     agent.save_model(args['save_path'], 0)
+        # save at the end of the training
         torch.distributed.barrier()
         agent.save_model(args['save_path'], 0)
 
@@ -108,3 +113,4 @@ if __name__ == "__main__":
     args = vars(args)
     args['layers'] = [7,15,23,31]
     main(**args)
+
