@@ -8,6 +8,7 @@ from PIL import Image
 
 from .self_sup_tasks import patch_ex
 
+# Constants and configurations specific to grape leaves
 WIDTH_BOUNDS_PCT = {
     'grapeleaves': ((0.03, 0.4), (0.03, 0.4))
 }
@@ -16,12 +17,15 @@ NUM_PATCHES = {
     'grapeleaves': 3
 }
 
+# k, x0 pairs
 INTENSITY_LOGISTIC_PARAMS = {
     'grapeleaves': (1/12, 24)
 }
 
+# No unaligned objects in grape leaves dataset
 UNALIGNED_OBJECTS = []
 
+# Brightness, threshold pairs
 BACKGROUND = {
     'grapeleaves': (200, 60)
 }
@@ -35,10 +39,7 @@ describles['grapeleaves'] = "This is a photo of a grape leaf for anomaly detecti
 class GrapeLeavesDataset(Dataset):
     def __init__(self, root_dir: str):
         self.root_dir = root_dir
-        self.transform = transforms.Resize(
-            (224, 224), interpolation=transforms.InterpolationMode.BICUBIC
-        )
-        
+        self.transform = transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BICUBIC)
         self.norm_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(
@@ -49,50 +50,31 @@ class GrapeLeavesDataset(Dataset):
 
         self.paths = []
         self.x = []
-        self.masks = []
         valid_extensions = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
         train_good_count = 0  
-        ground_truth_count = 0  
 
         for root, dirs, files in os.walk(root_dir):
             for file in files:
-                if "B.Rot" in file or "L.Blight" in file:
-                    continue
                 file_path = os.path.join(root, file)
-                if "train/good" in file_path and file.lower().endswith(valid_extensions):
-                    self.paths.append(file_path)
-                    try:
-                        self.x.append(self.transform(Image.open(file_path).convert('RGB')))
-                        train_good_count += 1  
-                    except FileNotFoundError:
-                        print(f"File not found: {file_path}")
-                        continue
-                    except Exception as e:
-                        print(f"Error loading image {file_path}: {e}")
-                        continue
-                elif "ground_truth" in file_path and file.lower().endswith(valid_extensions):
-                    try:
-                        mask = Image.open(file_path).convert('L')  
-                        self.masks.append(self.transform(mask))  
-                        ground_truth_count += 1  
-                    except FileNotFoundError:
-                        print(f"File not found: {file_path}")
-                        continue
-                    except Exception as e:
-                        print(f"Error loading image {file_path}: {e}")
-                        continue
-
-        self.prev_idx = np.random.randint(len(self.paths))
+                if ("B.Rot" not in file and "L.Blight" not in file) and file.lower().endswith(valid_extensions):
+                    if "train/good" in file_path:
+                        self.paths.append(file_path)
+                        try:
+                            self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                            train_good_count += 1  
+                        except FileNotFoundError:
+                            print(f"File not found: {file_path}")
+                            continue
+                        except Exception as e:
+                            print(f"Error loading image {file_path}: {e}")
+                            continue
 
         if train_good_count == 0:
-            print(f"No train/good data found in {self.root_dir}")
+            raise ValueError(f"No train/good data found in {self.root_dir}")
         else:
             print(f"Loaded {train_good_count} images from train/good in {self.root_dir}")
 
-        if ground_truth_count == 0:
-            print(f"No ground_truth data found in {self.root_dir}")
-        else:
-            print(f"Loaded {ground_truth_count} images from ground_truth in {self.root_dir}")
+        self.prev_idx = np.random.randint(len(self.paths))
 
     def __len__(self):
         return len(self.paths)
@@ -105,7 +87,7 @@ class GrapeLeavesDataset(Dataset):
             print(f"File not found or index error: {img_path}")
             return None
 
-        class_name = 'grapeleaves' 
+        class_name = 'grapeleaves'  # Default class name
 
         self_sup_args = {
             'width_bounds_pct': WIDTH_BOUNDS_PCT.get(class_name),
@@ -218,7 +200,7 @@ class GrapeLeavesDataset(Dataset):
             class_names.append(instance[4])
             masks.append(instance[5])
             img_paths.append(instance[6])
-            
+
         return dict(
             images=images,
             texts=texts,
