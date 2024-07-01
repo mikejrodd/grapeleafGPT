@@ -44,13 +44,10 @@ def load_sft_dataset(args):
     return data, iter_, sampler
 
 def load_grapeleaves_dataset(args):
-    '''
-    tokenizer = get_tokenizer(args['model_path'])
-    dataset_name = args['models'][args['model']]['stage1_train_dataset'] # SupervisedDataset, str
-    data_path = args["data_path"]
-    data = globals()[dataset_name](data_path, tokenizer, args['max_length']) #SupervisedDataset
-    '''
-    data = GrapeLeavesDataset('../data/grapeleaves')  
+    data = GrapeLeavesDataset('../data/grapeleaves')
+
+    if len(data) == 0:
+        raise ValueError(f"No valid train/good data found in {args['image_root_path']}")
 
     sampler = torch.utils.data.RandomSampler(data)
     world_size = torch.distributed.get_world_size()
@@ -71,6 +68,7 @@ def load_grapeleaves_dataset(args):
         pin_memory=False
     )
     return data, iter_, sampler
+
 
 
 def load_mvtec_dataset(args):
