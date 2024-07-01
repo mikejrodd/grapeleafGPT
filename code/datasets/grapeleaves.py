@@ -81,6 +81,7 @@ class GrapeLeavesDataset(Dataset):
 
     def __getitem__(self, index):
         img_path = self.paths[index]
+        logging.info(f'Accessing image path: {img_path}')
         try:
             x = self.x[index]
         except (FileNotFoundError, IndexError):
