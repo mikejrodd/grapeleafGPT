@@ -40,6 +40,9 @@ def patch_ex(ima_dest, ima_src=None, same=False, num_patches=1,
                         2. determine the aspect ratio by sampling from (0.3, 1) union (1, 3.3)
                         3. sample location such that patch is contained entirely within the image
     """
+    # print(f"patch_ex called with: width_bounds_pct={width_bounds_pct}, gamma_params={gamma_params}, intensity_logistic_params={intensity_logistic_params}")
+
+    
     if mode == 'mix':
         mode = (cv2.NORMAL_CLONE, cv2.MIXED_CLONE)[np.random.randint(2)]
 
@@ -112,6 +115,9 @@ def patch_ex(ima_dest, ima_src=None, same=False, num_patches=1,
 
 def _patch_ex(ima_dest, ima_src, dest_object_mask, src_object_mask, mode, label_mode, shift, resize, width_bounds_pct, 
               gamma_params, min_object_pct, min_overlap_pct, factor, resize_bounds, num_ellipses, verbose, cutpaste_patch_generation):
+    
+    # print(f"_patch_ex called with: width_bounds_pct={width_bounds_pct}, gamma_params={gamma_params}, min_object_pct={min_object_pct}, min_overlap_pct={min_overlap_pct}")
+    
     if cutpaste_patch_generation:
         skip_background = False
         dims = np.array(ima_dest.shape)
