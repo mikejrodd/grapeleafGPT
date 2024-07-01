@@ -2,6 +2,7 @@ from header import *
 from datasets import *
 from model import *
 from config import *
+import logging
 
 def parser_args():
     parser = argparse.ArgumentParser(description='train parameters')
