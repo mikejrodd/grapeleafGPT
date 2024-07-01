@@ -13,9 +13,7 @@ parser.add_argument("--few_shot", type=bool, default=True)
 parser.add_argument("--k_shot", type=int, default=1)
 parser.add_argument("--round", type=int, default=3)
 
-
 command_args = parser.parse_args()
-
 
 describles = {}
 describles['bottle'] = "This is a photo of a bottle for anomaly detection, which should be round, without any damage, flaw, defect, scratch, hole or broken part."
@@ -33,8 +31,9 @@ describles['toothbrush'] = "This is a photo of a toothbrush for anomaly detectio
 describles['transistor'] = "This is a photo of a transistor for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
 describles['wood'] = "This is a photo of wood for anomaly detection, which should be brown with patterns, without any damage, flaw, defect, scratch, hole or broken part."
 describles['zipper'] = "This is a photo of a zipper for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+describles['grapeleaves'] = "This is a photo of a grape leaf for anomaly detection. The leaf should be green and healthy, without any signs of esca disease, which includes discoloration, brown spots, or unusual texture. The leaf may appear damaged or diseased in a way not related to esca infection."
 
-FEW_SHOT = command_args.few_shot 
+FEW_SHOT = command_args.few_shot
 
 # init the model
 args = {
@@ -107,14 +106,19 @@ mask_transform = transforms.Compose([
                                 transforms.ToTensor()
                             ])
 
-CLASS_NAMES = ['bottle', 'cable', 'capsule', 'carpet', 'grid','hazelnut', 'leather', 'metal_nut', 'pill', 'screw','tile', 'toothbrush', 'transistor', 'wood', 'zipper']
+CLASS_NAMES = ['grapeleaves','bottle', 'cable', 'capsule', 'carpet', 'grid','hazelnut', 'leather', 'metal_nut', 'pill', 'screw','tile', 'toothbrush', 'transistor', 'wood', 'zipper']
 
 precision = []
 
 for c_name in CLASS_NAMES:
-    normal_img_paths = ["../data/mvtec_anomaly_detection/"+c_name+"/train/good/"+str(command_args.round * 4).zfill(3)+".png", "../data/mvtec_anomaly_detection/"+c_name+"/train/good/"+str(command_args.round * 4 + 1).zfill(3)+".png",
-                        "../data/mvtec_anomaly_detection/"+c_name+"/train/good/"+str(command_args.round * 4 + 2).zfill(3)+".png", "../data/mvtec_anomaly_detection/"+c_name+"/train/good/"+str(command_args.round * 4 + 3).zfill(3)+".png"]
-    normal_img_paths = normal_img_paths[:command_args.k_shot]
+# Dynamically list all image files in the directory
+    all_images = sorted([os.path.join("../data/mvtec_anomaly_detection/", c_name, "train", "good", f) 
+                        for f in os.listdir(f"../data/mvtec_anomaly_detection/{c_name}/train/good/") 
+                        if f.endswith('.png')])
+
+    # Select the necessary number of samples based on k_shot
+    normal_img_paths = all_images[:command_args.k_shot]
+
     right = 0
     wrong = 0
     p_pred = []
@@ -124,7 +128,7 @@ for c_name in CLASS_NAMES:
     for root, dirs, files in os.walk(root_dir):
         for file in files:
             file_path = os.path.join(root, file)
-            if "test" in file_path and 'png' in file and c_name in file_path:
+            if "test" in file_path and file.split('.')[-1].lower() in ['png', 'jpeg', 'jpg'] and c_name in file_path:
                 if FEW_SHOT:
                     resp, anomaly_map = predict(describles[c_name] + ' ' + input, file_path, normal_img_paths, 512, 0.1, 1.0, [], [])
                 else:
@@ -134,9 +138,14 @@ for c_name in CLASS_NAMES:
                 if is_normal:
                     img_mask = Image.fromarray(np.zeros((224, 224)), mode='L')
                 else:
-                    mask_path = file_path.replace('test', 'ground_truth')
-                    mask_path = mask_path.replace('.png', '_mask.png')
-                    img_mask = Image.open(mask_path).convert('L')
+                    mask_path = file_path.replace('test', 'ground_truth').replace('/esca', '')
+                    mask_path = os.path.splitext(mask_path)[0] + '_mask.jpg'
+                    try:
+                        img_mask = Image.open(mask_path).convert('L')
+                    except FileNotFoundError:
+                        print(f"Mask not found for image {file_path}. Skipping.")
+                        continue
+
 
                 img_mask = mask_transform(img_mask)
                 img_mask[img_mask > 0.1], img_mask[img_mask <= 0.1] = 1, 0
@@ -181,3 +190,4 @@ for c_name in CLASS_NAMES:
 print("i_AUROC:",torch.tensor(i_auc_list).mean())
 print("p_AUROC:",torch.tensor(p_auc_list).mean())
 print("precision:",torch.tensor(precision).mean())
+
