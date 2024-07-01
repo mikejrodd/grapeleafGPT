@@ -56,27 +56,31 @@ class RandomSampler(data.sampler.Sampler):
     def num_samples(self):
         # dataset size might change at runtime
         if self._num_samples is None:
+            print(f"Accessing num_samples: {len(self.data_source)}")
             return len(self.data_source)
         return self._num_samples
 
     def __iter__(self):
         n = len(self.data_source)
         g = torch.Generator()
+        print(f"Entering __iter__ method with dataset length {n}")
         if self.epoch >= 0:
             g.manual_seed(self.epoch)
+            print(f"Setting manual seed: {self.epoch}")
         if self.replacement:
             for _ in range(self.num_samples // 32):
                 yield from torch.randint(high=n, size=(32,), dtype=torch.int64, generator=g).tolist()
             yield from torch.randint(high=n, size=(self.num_samples % 32,), dtype=torch.int64,
                                      generator=g).tolist()
         else:
-            yield from torch.randperm(n, generator=self.generator).tolist()
+            yield from torch.randperm(n, generator=g).tolist()
 
     def __len__(self):
         return self.num_samples
 
     def set_epoch(self, epoch):
         self.epoch = epoch
+
 
 
 class DistributedSequentialSampler(data.sampler.Sampler):
@@ -92,26 +96,29 @@ class DistributedSequentialSampler(data.sampler.Sampler):
         self.train_iters = train_iters
         self.batch_size = batch_size
         self.batch_bias = [i * (num_samples // batch_size) for i in range(batch_size)]
+        print(f"Initialized DistributedSequentialSampler with num_samples={num_samples}, train_iters={train_iters}, batch_size={batch_size}, rank={rank}, world_size={world_size}")
 
     def __iter__(self):
         for idx in range(self.start_iter, self.train_iters * 10):
             batch = [(idx + bias) % self.num_samples for bias in self.batch_bias]
+            print(f"Generated batch indices before extraction: {batch}")
             tbatch = self._batch(batch)
+            print(f"Worker {self.rank} processing batch: {tbatch}")
             yield tbatch
 
     def __len__(self):
         return self.train_iters
 
     def _batch(self, batch):
-        """extracts samples only pertaining to this worker's batch"""
-        start = self.rank*self.batch_size//self.world_size
-        end = (self.rank+1)*self.batch_size//self.world_size
+        """Extracts samples only pertaining to this worker's batch."""
+        start = self.rank * self.batch_size // self.world_size
+        end = (self.rank + 1) * self.batch_size // self.world_size
         return batch[start:end]
 
 
 class DistributedBatchSampler(data.sampler.BatchSampler):
     """
-    similar to normal implementation of distributed sampler, except implementation is at the
+    Similar to normal implementation of distributed sampler, except implementation is at the
     batch sampler level, instead of just the sampler level. This allows wrapping of arbitrary
     data samplers (sequential, random, WeightedRandomSampler, etc.) with this batch sampler.
     """
@@ -126,6 +133,7 @@ class DistributedBatchSampler(data.sampler.BatchSampler):
         self.wrap_last = wrap_last
         self.start_iter = 0
         self.effective_batch_size = batch_size if gradient_accumulation_steps is None else batch_size * gradient_accumulation_steps
+        # print(f"Initialized DistributedBatchSampler with batch_size={batch_size}, drop_last={drop_last}, rank={rank}, world_size={world_size}, wrap_last={wrap_last}, effective_batch_size={self.effective_batch_size}")
 
     def __iter__(self):
         batch = []
@@ -134,7 +142,9 @@ class DistributedBatchSampler(data.sampler.BatchSampler):
             batch.append(idx)
             if len(batch) == self.batch_size:
                 tbatch = self._batch(batch)
+                # print(f"Generated batch: {tbatch} (before worker extraction)")
                 if i >= self.start_iter * self.effective_batch_size:
+                    #print(f"Yielding batch: {tbatch} for worker {self.rank}")
                     yield tbatch
                     self.start_iter = 0
                 i += len(batch)
@@ -145,14 +155,16 @@ class DistributedBatchSampler(data.sampler.BatchSampler):
                 self.sampler.wrap_around -= (self.batch_size)
                 self.wrap_around += (len(batch))
                 self.wrap_around %= self.batch_size
-            yield self._batch(batch)
+            final_batch = self._batch(batch)
+            # print(f"Yielding final batch: {final_batch} for worker {self.rank}")
+            yield final_batch
         if self.wrap_last:
             self.sampler.wrap_around += self.batch_size
 
     def data_iterator(self, _iter, wrap_around=False):
-        """iterates through data and handles wrap around"""
+        """Iterates through data and handles wrap around"""
         for i, idx in enumerate(_iter):
-            if i < self.wrap_around%self.batch_size:
+            if i < self.wrap_around % self.batch_size:
                 continue
             if wrap_around:
                 self.wrap_around += 1
@@ -160,7 +172,10 @@ class DistributedBatchSampler(data.sampler.BatchSampler):
             yield idx
 
     def _batch(self, batch):
-        """extracts samples only pertaining to this worker's batch"""
-        start = self.rank*self.batch_size//self.world_size
-        end = (self.rank+1)*self.batch_size//self.world_size
-        return batch[start:end]
+        """Extracts samples only pertaining to this worker's batch"""
+        start = self.rank * self.batch_size // self.world_size
+        end = (self.rank + 1) * self.batch_size // self.world_size
+        worker_batch = batch[start:end]
+        # print(f"Worker {self.rank} processing indices from {start} to {end}: {worker_batch}")
+        return worker_batch
+
