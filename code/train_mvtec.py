@@ -79,12 +79,13 @@ def main(**args):
     torch.distributed.barrier()
 
     # begin to train
-    pbar = tqdm(total= 2 * length)    # maximum total number
+    pbar = tqdm(total=2 * length)    # maximum total number
     current_step = 0
     for epoch_i in tqdm(range(args['epochs'])):
+        #sampler.set_epoch(epoch_i)  # Set the epoch for the sampler
         iter_every_epoch = 0
-        for batch, batch_sft in zip(train_iter, train_iter_sft):
-            if batch is None or batch_sft is None:
+        for batch in train_iter:
+            if batch is None:
                 continue  # Skip if any batch is None
             iter_every_epoch += 1
             agent.train_model(
@@ -94,12 +95,12 @@ def main(**args):
             )
             del batch
             
-            agent.train_model(
-                batch_sft, 
-                current_step=current_step, 
-                pbar=pbar
-            )
-            del batch_sft
+            # agent.train_model(
+            #     batch_sft, 
+            #     current_step=current_step, 
+            #     pbar=pbar
+            # )
+            # del batch_sft
             current_step += 1
             # torch.cuda.empty_cache()
             # if iter_every_epoch % 1000 == 0:
