@@ -9,59 +9,99 @@ from PIL import Image
 from .self_sup_tasks import patch_ex
 
 WIDTH_BOUNDS_PCT = {
-    'bottle':((0.03, 0.4), (0.03, 0.4)), 'cable':((0.05, 0.4), (0.05, 0.4)), 'capsule':((0.03, 0.15), (0.03, 0.4)), 
-    'hazelnut':((0.03, 0.35), (0.03, 0.35)), 'metal_nut':((0.03, 0.4), (0.03, 0.4)), 'pill':((0.03, 0.2), (0.03, 0.4)), 
-    'screw':((0.03, 0.12), (0.03, 0.12)), 'toothbrush':((0.03, 0.4), (0.03, 0.2)), 'transistor':((0.03, 0.4), (0.03, 0.4)), 
-    'zipper':((0.03, 0.4), (0.03, 0.2)), 'carpet':((0.03, 0.4), (0.03, 0.4)), 'grid':((0.03, 0.4), (0.03, 0.4)), 
-    'leather':((0.03, 0.4), (0.03, 0.4)), 'tile':((0.03, 0.4), (0.03, 0.4)), 'wood':((0.03, 0.4), (0.03, 0.4)),
-    'grapeleaves':((0.03, 0.4), (0.03, 0.4))
+    'bottle': ((0.03, 0.4), (0.03, 0.4)),
+    'wood': ((0.03, 0.4), (0.03, 0.4)),
+    'grapeleaves': ((0.03, 0.4), (0.03, 0.4))
 }
 
 NUM_PATCHES = {
-    'bottle':3, 'cable':3, 'capsule':3, 'hazelnut':3, 'metal_nut':3, 'pill':3, 
-    'screw':4, 'toothbrush':3, 'transistor':3, 'zipper':4, 'carpet':4, 'grid':4, 
-    'leather':4, 'tile':4, 'wood':4, 'grapeleaves':4
+    'bottle': 3,
+    'wood': 4,
+    'grapeleaves': 4
 }
 
 # k, x0 pairs
 INTENSITY_LOGISTIC_PARAMS = {
-    'bottle':(1/12, 24), 'cable':(1/12, 24), 'capsule':(1/2, 4), 'hazelnut':(1/12, 24), 'metal_nut':(1/3, 7), 
-    'pill':(1/3, 7), 'screw':(1, 3), 'toothbrush':(1/6, 15), 'transistor':(1/6, 15), 'zipper':(1/6, 15),
-    'carpet':(1/3, 7), 'grid':(1/3, 7), 'leather':(1/3, 7), 'tile':(1/3, 7), 'wood':(1/6, 15), 'grapeleaves':(1/12, 24)
+    'bottle': (1/12, 24),
+    'wood': (1/6, 15),
+    'grapeleaves': (1/12, 24)
 }
 
 # bottle is aligned but it's symmetric under rotation
-UNALIGNED_OBJECTS = ['bottle', 'hazelnut', 'metal_nut', 'screw', 'grapeleaves']
+UNALIGNED_OBJECTS = ['bottle', 'grapeleaves']
 
 # brightness, threshold pairs
 BACKGROUND = {
-    'bottle':(200, 60), 'screw':(200, 60), 'capsule':(200, 60), 'zipper':(200, 60), 
-    'hazelnut':(20, 20), 'pill':(20, 20), 'toothbrush':(20, 20), 'metal_nut':(20, 20), 'grapeleaves': (200, 60)
+    'bottle': (200, 60),
+    'grapeleaves': (200, 60)
 }
 
 OBJECTS = [
-    'bottle', 'cable', 'capsule', 'hazelnut', 'metal_nut', 'pill', 'screw', 
-    'toothbrush', 'transistor', 'zipper', 'grapeleaves'
+    'bottle', 'grapeleaves'
 ]
-TEXTURES = ['carpet', 'grid', 'leather', 'tile', 'wood']
+
+TEXTURES = ['wood']
 
 describles = {}
 describles['bottle'] = "This is a photo of a bottle for anomaly detection, which should be round, without any damage, flaw, defect, scratch, hole or broken part."
-describles['cable'] = "This is a photo of three cables for anomaly detection, they are green, blue and grey, which cannot be missed or swapped and should be without any damage, flaw, defect, scratch, hole or broken part."
-describles['capsule'] = "This is a photo of a capsule for anomaly detection, which should be black and orange, with print '500', without any damage, flaw, defect, scratch, hole or broken part."
-describles['carpet'] = "This is a photo of carpet for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
-describles['grid'] = "This is a photo of grid for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
-describles['hazelnut'] = "This is a photo of a hazelnut for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
-describles['leather'] = "This is a photo of leather for anomaly detection, which should be brown and without any damage, flaw, defect, scratch, hole or broken part."
-describles['metal_nut'] = "This is a photo of a metal nut for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part, and shouldn't be fliped."
-describles['pill'] = "This is a photo of a pill for anomaly detection, which should be white, with print 'FF' and red patterns, without any damage, flaw, defect, scratch, hole or broken part."
-describles['screw'] = "This is a photo of a screw for anomaly detection, which tail should be sharp, and without any damage, flaw, defect, scratch, hole or broken part."
-describles['tile'] = "This is a photo of tile for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
-describles['toothbrush'] = "This is a photo of a toothbrush for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
-describles['transistor'] = "This is a photo of a transistor for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
 describles['wood'] = "This is a photo of wood for anomaly detection, which should be brown with patterns, without any damage, flaw, defect, scratch, hole or broken part."
-describles['zipper'] = "This is a photo of a zipper for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
 describles['grapeleaves'] = "This is a photo of healthy grape leaves for anomaly detection, which should be green, without any damage, flaw, defect, scratch, hole or brown part."
+
+
+# WIDTH_BOUNDS_PCT = {
+#     'bottle':((0.03, 0.4), (0.03, 0.4)), 'cable':((0.05, 0.4), (0.05, 0.4)), 'capsule':((0.03, 0.15), (0.03, 0.4)), 
+#     'hazelnut':((0.03, 0.35), (0.03, 0.35)), 'metal_nut':((0.03, 0.4), (0.03, 0.4)), 'pill':((0.03, 0.2), (0.03, 0.4)), 
+#     'screw':((0.03, 0.12), (0.03, 0.12)), 'toothbrush':((0.03, 0.4), (0.03, 0.2)), 'transistor':((0.03, 0.4), (0.03, 0.4)), 
+#     'zipper':((0.03, 0.4), (0.03, 0.2)), 'carpet':((0.03, 0.4), (0.03, 0.4)), 'grid':((0.03, 0.4), (0.03, 0.4)), 
+#     'leather':((0.03, 0.4), (0.03, 0.4)), 'tile':((0.03, 0.4), (0.03, 0.4)), 'wood':((0.03, 0.4), (0.03, 0.4)),
+#     'grapeleaves':((0.03, 0.4), (0.03, 0.4))
+# }
+
+# NUM_PATCHES = {
+#     'bottle':3, 'cable':3, 'capsule':3, 'hazelnut':3, 'metal_nut':3, 'pill':3, 
+#     'screw':4, 'toothbrush':3, 'transistor':3, 'zipper':4, 'carpet':4, 'grid':4, 
+#     'leather':4, 'tile':4, 'wood':4, 'grapeleaves':4
+# }
+
+# # k, x0 pairs
+# INTENSITY_LOGISTIC_PARAMS = {
+#     'bottle':(1/12, 24), 'cable':(1/12, 24), 'capsule':(1/2, 4), 'hazelnut':(1/12, 24), 'metal_nut':(1/3, 7), 
+#     'pill':(1/3, 7), 'screw':(1, 3), 'toothbrush':(1/6, 15), 'transistor':(1/6, 15), 'zipper':(1/6, 15),
+#     'carpet':(1/3, 7), 'grid':(1/3, 7), 'leather':(1/3, 7), 'tile':(1/3, 7), 'wood':(1/6, 15), 'grapeleaves':(1/12, 24)
+# }
+
+# # bottle is aligned but it's symmetric under rotation
+# UNALIGNED_OBJECTS = ['bottle', 'hazelnut', 'metal_nut', 'screw', 'grapeleaves']
+
+# # brightness, threshold pairs
+# BACKGROUND = {
+#     'bottle':(200, 60), 'screw':(200, 60), 'capsule':(200, 60), 'zipper':(200, 60), 
+#     'hazelnut':(20, 20), 'pill':(20, 20), 'toothbrush':(20, 20), 'metal_nut':(20, 20), 'grapeleaves': (200, 60)
+# }
+
+# OBJECTS = [
+#     'bottle', 'cable', 'capsule', 'hazelnut', 'metal_nut', 'pill', 'screw', 
+#     'toothbrush', 'transistor', 'zipper', 'grapeleaves'
+# ]
+# TEXTURES = ['carpet', 'grid', 'leather', 'tile', 'wood']
+
+# describles = {}
+# describles['bottle'] = "This is a photo of a bottle for anomaly detection, which should be round, without any damage, flaw, defect, scratch, hole or broken part."
+# describles['cable'] = "This is a photo of three cables for anomaly detection, they are green, blue and grey, which cannot be missed or swapped and should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['capsule'] = "This is a photo of a capsule for anomaly detection, which should be black and orange, with print '500', without any damage, flaw, defect, scratch, hole or broken part."
+# describles['carpet'] = "This is a photo of carpet for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['grid'] = "This is a photo of grid for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['hazelnut'] = "This is a photo of a hazelnut for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['leather'] = "This is a photo of leather for anomaly detection, which should be brown and without any damage, flaw, defect, scratch, hole or broken part."
+# describles['metal_nut'] = "This is a photo of a metal nut for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part, and shouldn't be fliped."
+# describles['pill'] = "This is a photo of a pill for anomaly detection, which should be white, with print 'FF' and red patterns, without any damage, flaw, defect, scratch, hole or broken part."
+# describles['screw'] = "This is a photo of a screw for anomaly detection, which tail should be sharp, and without any damage, flaw, defect, scratch, hole or broken part."
+# describles['tile'] = "This is a photo of tile for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['toothbrush'] = "This is a photo of a toothbrush for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['transistor'] = "This is a photo of a transistor for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['wood'] = "This is a photo of wood for anomaly detection, which should be brown with patterns, without any damage, flaw, defect, scratch, hole or broken part."
+# describles['zipper'] = "This is a photo of a zipper for anomaly detection, which should be without any damage, flaw, defect, scratch, hole or broken part."
+# describles['grapeleaves'] = "This is a photo of healthy grape leaves for anomaly detection, which should be green, without any damage, flaw, defect, scratch, hole or brown part."
 
 class MVtecDataset(Dataset):
     def __init__(self, root_dir: str):
@@ -80,10 +120,11 @@ class MVtecDataset(Dataset):
 
         self.paths = []
         self.x = []
+        valid_extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
         for root, dirs, files in os.walk(root_dir):
             for file in files:
                 file_path = os.path.join(root, file)
-                if "train" in file_path and "good" in file_path and 'png' in file:
+                if "train" in file_path and "good" in file_path and any(file.endswith(ext) for ext in valid_extensions):
                     self.paths.append(file_path)
                     try:
                         self.x.append(self.transform(Image.open(file_path).convert('RGB')))
@@ -97,7 +138,6 @@ class MVtecDataset(Dataset):
             print(f"No data found in {self.root_dir}")
         else:
             print(f"Loaded {len(self.paths)} images from {self.root_dir}")
-
     def __len__(self):
         return len(self.paths)
 
