@@ -9,42 +9,33 @@ from PIL import Image
 from .self_sup_tasks import patch_ex
 
 WIDTH_BOUNDS_PCT = {
-    'bottle': ((0.03, 0.4), (0.03, 0.4)),
-    'wood': ((0.03, 0.4), (0.03, 0.4)),
     'grapeleaves': ((0.03, 0.4), (0.03, 0.4))
 }
 
 NUM_PATCHES = {
-    'bottle': 3,
-    'wood': 4,
     'grapeleaves': 4
 }
 
 # k, x0 pairs
 INTENSITY_LOGISTIC_PARAMS = {
-    'bottle': (1/12, 24),
-    'wood': (1/6, 15),
     'grapeleaves': (1/12, 24)
 }
 
 # bottle is aligned but it's symmetric under rotation
-UNALIGNED_OBJECTS = ['bottle', 'grapeleaves']
+UNALIGNED_OBJECTS = ['grapeleaves']
 
 # brightness, threshold pairs
 BACKGROUND = {
-    'bottle': (200, 60),
     'grapeleaves': (200, 60)
 }
 
 OBJECTS = [
-    'bottle', 'grapeleaves'
+    'grapeleaves'
 ]
 
-TEXTURES = ['wood']
+TEXTURES = []
 
 describles = {}
-describles['bottle'] = "This is a photo of a bottle for anomaly detection, which should be round, without any damage, flaw, defect, scratch, hole or broken part."
-describles['wood'] = "This is a photo of wood for anomaly detection, which should be brown with patterns, without any damage, flaw, defect, scratch, hole or broken part."
 describles['grapeleaves'] = "This is a photo of healthy grape leaves for anomaly detection, which should be green, without any damage, flaw, defect, scratch, hole or brown part."
 
 
@@ -120,24 +111,50 @@ class MVtecDataset(Dataset):
 
         self.paths = []
         self.x = []
-        valid_extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
+        self.masks = []  # Define the self.masks attribute
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
+        train_good_count = 0  # Counter for train/good images
+        ground_truth_count = 0  # Counter for ground_truth images
+
         for root, dirs, files in os.walk(root_dir):
             for file in files:
                 file_path = os.path.join(root, file)
-                if "train" in file_path and "good" in file_path and any(file.endswith(ext) for ext in valid_extensions):
+                if "train/good" in file_path and file.lower().endswith(valid_extensions):
                     self.paths.append(file_path)
                     try:
                         self.x.append(self.transform(Image.open(file_path).convert('RGB')))
+                        train_good_count += 1  # Increment the counter for each successful image load
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
+                        continue
+                    except Exception as e:
+                        print(f"Error loading image {file_path}: {e}")
+                        continue
+                elif "ground_truth" in file_path and file.lower().endswith(valid_extensions):
+                    try:
+                        mask = self.transform(Image.open(file_path).convert('L'))  # Assuming masks are grayscale
+                        self.masks.append(mask)  # Append the transformed mask
+                        ground_truth_count += 1  # Increment the counter for each successful image load
+                    except FileNotFoundError:
+                        print(f"File not found: {file_path}")
+                        continue
+                    except Exception as e:
+                        print(f"Error loading image {file_path}: {e}")
                         continue
 
         self.prev_idx = np.random.randint(len(self.paths))
 
-        if len(self.paths) == 0:
-            print(f"No data found in {self.root_dir}")
+        # Debug statement to check if paths and masks are loaded
+        if train_good_count == 0:
+            print(f"No train/good data found in {self.root_dir}")
         else:
-            print(f"Loaded {len(self.paths)} images from {self.root_dir}")
+            print(f"Loaded {train_good_count} images from train/good in {self.root_dir}")
+
+        if ground_truth_count == 0:
+            print(f"No ground_truth data found in {self.root_dir}")
+        else:
+            print(f"Loaded {ground_truth_count} images from ground_truth in {self.root_dir}")
+
     def __len__(self):
         return len(self.paths)
 
@@ -149,7 +166,11 @@ class MVtecDataset(Dataset):
             print(f"File not found or index error: {img_path}")
             return None
 
-        class_name = img_path.split('/')[-4]
+        # Manually set the class name to 'grapeleaves'
+        class_name = 'grapeleaves'
+
+        # Debug statement to check class_name
+        print(f"class_name: {class_name}")
 
         self_sup_args = {
             'width_bounds_pct': WIDTH_BOUNDS_PCT.get(class_name),
@@ -157,13 +178,20 @@ class MVtecDataset(Dataset):
             'num_patches': 2,
             'min_object_pct': 0,
             'min_overlap_pct': 0.25,
-            'gamma_params': (2, 0.05, 0.03), 'resize': True, 
+            'gamma_params': (2, 0.05, 0.03), 
+            'resize': True, 
             'shift': True, 
             'same': False, 
             'mode': cv2.NORMAL_CLONE,
             'label_mode': 'logistic-intensity',
             'skip_background': BACKGROUND.get(class_name)
         }
+
+        # Debug statement to check self_sup_args
+        print(f"self_sup_args: {self_sup_args}")
+
+        if self_sup_args['width_bounds_pct'] is None:
+            raise ValueError(f"width_bounds_pct is None for class {class_name}")
 
         x = np.asarray(x)
         origin = x
@@ -262,7 +290,7 @@ class MVtecDataset(Dataset):
             class_names.append(instance[4])
             masks.append(instance[5])
             img_paths.append(instance[6])
-
+            
         return dict(
             images=images,
             texts=texts,
