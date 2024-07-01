@@ -48,13 +48,18 @@ class DeepSpeedAgent:
         self.ds_engine.step()
         pbar.set_description(f'[!] loss: {round(loss.item(), 4)}; token_acc: {round(mle_acc*100, 2)}')
         pbar.update(1)
+        
+        # Log the image paths in the current batch
+        if 'img_paths' in batch:
+            logging.info(f'Batch {current_step} image paths: {batch["img_paths"]}')
+
         if self.args['local_rank'] == 0 and self.args['log_path'] and current_step % self.args['logging_step'] == 0:
             elapsed = pbar.format_dict['elapsed']
             rate = pbar.format_dict['rate']
             remaining = (pbar.total - pbar.n) / rate if rate and pbar.total else 0
             remaining = str(datetime.timedelta(seconds=remaining))
             logging.info(f'[!] progress: {round(pbar.n/pbar.total, 5)}; remaining time: {remaining}; loss: {round(loss.item(), 4)}; token_acc: {round(mle_acc*100, 2)}')
-            
+
         mle_acc *= 100
         return mle_acc
 
