@@ -170,7 +170,7 @@ class MVtecDataset(Dataset):
         class_name = 'grapeleaves'
 
         # Debug statement to check class_name
-        print(f"class_name: {class_name}")
+        # print(f"class_name: {class_name}")
 
         self_sup_args = {
             'width_bounds_pct': WIDTH_BOUNDS_PCT.get(class_name),
@@ -188,7 +188,7 @@ class MVtecDataset(Dataset):
         }
 
         # Debug statement to check self_sup_args
-        print(f"self_sup_args: {self_sup_args}")
+        # print(f"self_sup_args: {self_sup_args}")
 
         if self_sup_args['width_bounds_pct'] is None:
             raise ValueError(f"width_bounds_pct is None for class {class_name}")
@@ -276,25 +276,39 @@ class MVtecDataset(Dataset):
         class_names = []
         masks = []
         img_paths = []
-        for instance in instances:
+
+        for i, instance in enumerate(instances):
             if instance is None:
                 continue
+
+            # Add the first set of data
             images.append(instance[0])
             texts.append(instance[1])
             class_names.append(instance[4])
             masks.append(torch.zeros_like(instance[5]))
             img_paths.append(instance[6])
 
+            # Add the second set of data
             images.append(instance[2])
             texts.append(instance[3])
             class_names.append(instance[4])
             masks.append(instance[5])
             img_paths.append(instance[6])
-            
-        return dict(
-            images=images,
-            texts=texts,
-            class_names=class_names,
-            masks=masks,
-            img_paths=img_paths
-        )
+
+        # # Print the summary of the batch
+        # print(f'\nSummary of processed instances:')
+        # print(f'  Total instances processed: {len(instances)}')
+        # print(f'  Total images collected: {len(images)}')
+        # print(f'  Total texts collected: {len(texts)}')
+        # print(f'  Total class names collected: {len(class_names)}')
+        # print(f'  Total masks collected: {len(masks)}')
+        # print(f'  Total img paths collected: {len(img_paths)}')
+        # print(f'  Img Paths Details: {img_paths}\n')
+
+        return {
+            'images': images,
+            'texts': texts,
+            'class_names': class_names,
+            'masks': masks,
+            'img_paths': img_paths
+        }
