@@ -1,4 +1,5 @@
 from header import *
+from torch import batch_norm
 
 class DeepSpeedAgent:
     
@@ -50,8 +51,8 @@ class DeepSpeedAgent:
         pbar.update(1)
         
         # Log the image paths in the current batch
-        if 'img_paths' in batch:
-            logging.info(f'Batch {current_step} image paths: {batch["img_paths"]}')
+        # if 'img_paths' in batch:
+        #     print(batch)
 
         if self.args['local_rank'] == 0 and self.args['log_path'] and current_step % self.args['logging_step'] == 0:
             elapsed = pbar.format_dict['elapsed']
