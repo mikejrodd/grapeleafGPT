@@ -1,6 +1,6 @@
 #!/bin/bash
 
-deepspeed --num_gpus=1 --master_port 28400 train_mvtec.py \
+deepspeed --num_gpus=1 --master_port 28400 train_grapeleaves.py \
     --model openllama_peft \
     --stage 1\
     --imagebind_ckpt_path ../pretrained_ckpt/imagebind_ckpt/imagebind_huge.pth\
@@ -9,5 +9,5 @@ deepspeed --num_gpus=1 --master_port 28400 train_mvtec.py \
     --max_tgt_len 1024\
     --data_path  ../data/pandagpt4_visual_instruction_data.json\
     --image_root_path ../data/images/\
-    --save_path  ./ckpt/train_mvtec/\
-    --log_path ./ckpt/train_mvtec/log_rest/
+    --save_path  ./ckpt/train_grapeleaves/\
+    --log_path ./ckpt/train_grapeleaves/log_rest/
