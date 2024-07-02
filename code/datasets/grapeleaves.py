@@ -55,10 +55,10 @@ class GrapeLeafDataset(Dataset):
 
         self.paths = []
         self.x = []
-        self.masks = []  # Define the self.masks attribute
+        self.masks = []  
         valid_extensions = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
-        train_good_count = 0  # Counter for train/good images
-        ground_truth_count = 0  # Counter for ground_truth images
+        train_good_count = 0  
+        ground_truth_count = 0  
 
         for root, dirs, files in os.walk(root_dir):
             for file in files:
@@ -76,9 +76,9 @@ class GrapeLeafDataset(Dataset):
                         continue
                 elif "ground_truth" in file_path and file.lower().endswith(valid_extensions):
                     try:
-                        mask = self.transform(Image.open(file_path).convert('L'))  # Assuming masks are grayscale
-                        self.masks.append(mask)  # Append the transformed mask
-                        ground_truth_count += 1  # Increment the counter for each successful image load
+                        mask = self.transform(Image.open(file_path).convert('L')) 
+                        self.masks.append(mask)  
+                        ground_truth_count += 1  
                     except FileNotFoundError:
                         print(f"File not found: {file_path}")
                         continue
@@ -110,7 +110,6 @@ class GrapeLeafDataset(Dataset):
             print(f"File not found or index error: {img_path}")
             return None
 
-        # Manually set the class name to 'grapeleaves'
         class_name = 'grapeleaves'
 
         # Debug statement to check class_name
@@ -225,14 +224,12 @@ class GrapeLeafDataset(Dataset):
             if instance is None:
                 continue
 
-            # Add the first set of data
             images.append(instance[0])
             texts.append(instance[1])
             class_names.append(instance[4])
             masks.append(torch.zeros_like(instance[5]))
             img_paths.append(instance[6])
 
-            # Add the second set of data
             images.append(instance[2])
             texts.append(instance[3])
             class_names.append(instance[4])
