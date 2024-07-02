@@ -14,7 +14,7 @@ args = {
     'model': 'openllama_peft',
     'imagebind_ckpt_path': '../pretrained_ckpt/imagebind_ckpt/imagebind_huge.pth',
     'vicuna_ckpt_path': '../pretrained_ckpt/vicuna_ckpt/7b_v0',
-    'anomalygpt_ckpt_path': './ckpt/train_supervised/pytorch_model.pt',
+    'anomalygpt_ckpt_path': './ckpt/train_grapeleaves/pytorch_model.pt',
     'delta_ckpt_path': '../pretrained_ckpt/pandagpt_ckpt/7b/pytorch_model.pt',
     'stage': 2,
     'max_tgt_len': 128,
@@ -165,25 +165,25 @@ def reset_user_input():
 
 
 def reset_state():
-    return gr.update(value=''), None, None, [], [], [], PILImage.open('pic.png')
+    return gr.update(value=''), None, None, [], [], [], PILImage.open('ffffff.png')
 
 
 
 with gr.Blocks() as demo:
-    gr.HTML("""<h1 align="center">Demo of AnomalyGPT</h1>""")
+    gr.HTML("""<h1 align="center">Demo of grapeleafGPT</h1>""")
 
     with gr.Row():
         with gr.Column(scale=1):
             with gr.Row(scale=3):
-                image_path = gr.Image(type="filepath", label="Query Image", value=None)
+                image_path = gr.Image(type="filepath", label="Potential Esca Image", value=None)
             with gr.Row(scale=3):
-                normal_img_path = gr.Image(type="filepath", label="Normal Image (optional)", value=None)
+                normal_img_path = gr.Image(type="filepath", label="Healthy Leaf Image (optional)", value=None)
             with gr.Row():
-                max_length = gr.Slider(0, 512, value=512, step=1.0, label="Maximum length", interactive=True)
+                max_length = gr.Slider(0, 512, value=512, step=1.0, label="Maximum length: Higher values allow for longer responses", interactive=True)
             with gr.Row():
-                top_p = gr.Slider(0, 1, value=0.01, step=0.01, label="Top P", interactive=True)
+                top_p = gr.Slider(0, 1, value=0.01, step=0.01, label="Top P: Lower values make the model more conservative", interactive=True)
             with gr.Row():
-                temperature = gr.Slider(0, 1, value=1.0, step=0.01, label="Temperature", interactive=True)
+                temperature = gr.Slider(0, 1, value=1.0, step=0.01, label="Temperature: Higher values are more creative", interactive=True)
 
 
         with gr.Column(scale=3):
@@ -192,7 +192,7 @@ with gr.Blocks() as demo:
                     chatbot = gr.Chatbot().style(height=415)
                 with gr.Column(scale=4):
                     # gr.Image(output)
-                    image_output = gr.Image(interactive=False, label="Localization Output", every=1.0, shape=[224,224], type='pil',value=PILImage.open('ffffff.png'))
+                    image_output = gr.Image(interactive=False, label="Anomaly Localization (Esca Symptoms)", every=1.0, shape=[224,224], type='pil',value=PILImage.open('ffffff.png'))
             with gr.Row():
                 user_input = gr.Textbox(show_label=False, placeholder="Input...", lines=10).style(container=False)
             with gr.Row():
@@ -236,4 +236,4 @@ with gr.Blocks() as demo:
     ], show_progress=True)
 
 
-demo.queue().launch()
+demo.queue().launch(share=True)
