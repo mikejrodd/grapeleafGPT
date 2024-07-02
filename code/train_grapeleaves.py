@@ -10,13 +10,13 @@ def parser_args():
     parser.add_argument('--save_path', type=str)
     parser.add_argument('--log_path', type=str)
     # model configurations
-    parser.add_argument('--imagebind_ckpt_path', type=str) # the path that stores the imagebind checkpoint
-    parser.add_argument('--vicuna_ckpt_path', type=str) # the path that stores the vicuna checkpoint
-    parser.add_argument('--delta_ckpt_path', type=str) # the delta parameters trained in stage 1
-    parser.add_argument('--max_tgt_len', type=int) # the maximum sequence length
-    parser.add_argument('--stage', type=int) # the maximum sequence length
-    parser.add_argument('--data_path', type=str) # the maximum sequence length
-    parser.add_argument('--image_root_path', type=str) # the maximum sequence length
+    parser.add_argument('--imagebind_ckpt_path', type=str) 
+    parser.add_argument('--vicuna_ckpt_path', type=str) 
+    parser.add_argument('--delta_ckpt_path', type=str) 
+    parser.add_argument('--max_tgt_len', type=int) 
+    parser.add_argument('--stage', type=int)
+    parser.add_argument('--data_path', type=str) 
+    parser.add_argument('--image_root_path', type=str)
 
     return parser.parse_args()
 
