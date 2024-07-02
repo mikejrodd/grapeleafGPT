@@ -165,7 +165,7 @@ def reset_user_input():
 
 
 def reset_state():
-    return gr.update(value=''), None, None, [], [], [], PILImage.open('ffffff.png')
+    return gr.update(value=''), None, None, [], [], [], PILImage.open('pic.png')
 
 
 
