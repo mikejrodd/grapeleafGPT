@@ -95,17 +95,8 @@ def main(**args):
             )
             del batch
             
-            # agent.train_model(
-            #     batch_sft, 
-            #     current_step=current_step, 
-            #     pbar=pbar
-            # )
-            # del batch_sft
             current_step += 1
-            # torch.cuda.empty_cache()
-            # if iter_every_epoch % 1000 == 0:
-            #     agent.save_model(args['save_path'], 0)
-        # save at the end of the training
+
         torch.distributed.barrier()
         agent.save_model(args['save_path'], 0)
 
