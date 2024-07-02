@@ -38,7 +38,7 @@ TEXTURES = []
 describles = {}
 describles['grapeleaves'] = "This is a photo of healthy grape leaves for anomaly detection, which should be green, without any damage, flaw, defect, scratch, hole or brown part."
 
-class MVtecDataset(Dataset):
+class GrapeLeafDataset(Dataset):
     def __init__(self, root_dir: str):
         self.root_dir = root_dir
         self.transform = transforms.Resize(
