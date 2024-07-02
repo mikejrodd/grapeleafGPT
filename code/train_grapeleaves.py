@@ -69,8 +69,7 @@ def main(**args):
             filemode='w'
         )
     
-    train_data, train_iter, sampler = load_mvtec_dataset(args)
-    train_data_sft, train_iter_sft, sampler_sft = load_sft_dataset(args)
+    train_data, train_iter, sampler = load_grape_dataset(args)
 
     length = args['epochs'] * len(train_data) // args['world_size'] // dschf.config['train_micro_batch_size_per_gpu']
     total_steps = 2 * args['epochs'] * len(train_data) // dschf.config['train_batch_size']
@@ -79,14 +78,13 @@ def main(**args):
     torch.distributed.barrier()
 
     # begin to train
-    pbar = tqdm(total=2 * length)    # maximum total number
+    pbar = tqdm(total=2 * length)    
     current_step = 0
     for epoch_i in tqdm(range(args['epochs'])):
-        #sampler.set_epoch(epoch_i)  # Set the epoch for the sampler
         iter_every_epoch = 0
         for batch in train_iter:
             if batch is None:
-                continue  # Skip if any batch is None
+                continue  
             iter_every_epoch += 1
             agent.train_model(
                 batch, 
