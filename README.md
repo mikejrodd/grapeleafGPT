@@ -11,10 +11,10 @@ GrapeLeafGPT is a machine learning project designed to detect Esca-infected grap
 
 ## Model Performance on Test Images:
 
-- grapeleaves right: 1437 wrong: 2288
-- i_AUROC: 67.25
-- p_AUROC: 58.69
-- precision: 38.58
+- grapeleaves right: 739 wrong: 163
+- i_AUROC: 94.9
+- p_AUROC: 81.2
+- precision: 81.9
 
 ## Background on Esca Disease
 Esca disease is a complex and devastating grapevine trunk disease that affects vineyards worldwide. It manifests through various symptoms on grape leaves, including tiger stripe patterns, chlorosis, and necrosis. Infected vines suffer from reduced yield and grape quality, which severely impacts vineyard management and winemaking.
@@ -89,25 +89,6 @@ class AnomalyGPT(nn.Module):
         anomaly_map = self.decoder(image_features + prompt_features)
         return anomaly_map
 ```
-
-## Performance Assessment:
-
-The performance of AnomalyGPT in detecting esca disease in grape leaves was suboptimal, as indicated by the metrics obtained: an accuracy of 38%, an i_AUROC of 67.25, and a p_AUROC of 58.69. These results suggest significant challenges in the model's ability to accurately identify and localize anomalies specific to Esca disease.
-
-A key aspect of AnomalyGPT's functioning is its reliance on precise localization of anomalies. The model generates pixel-level anomaly maps to highlight potential diseased areas in the leaves. These maps are then compared against ground truth masks to evaluate the model's performance. High localization accuracy is critical because any error in these pixel-level predictions can drastically affect the overall performance metrics, including precision and AUROC scores.
-
-In this case, the ground truth masks were created through a largely manual verification process, which led to rudimentary and potentially inconsistent mask images. These masks are essential for training and evaluating the model, as they provide the reference for what constitutes an anomaly in the context of esca disease. However, the rudimentary nature of the masks means they may not capture all the nuances and variations in the symptoms of esca accurately. Esca disease symptoms can vary significantly in color, shape, and location on the leaf. This variability introduces additional complexity, as the model needs to generalize well across different manifestations of the disease. Additionally, leaves with esca may exhibit symptoms in the same locations as leaves with other diseases, leading to potential overlap. This overlap can confuse the model, causing it to misclassify or fail to detect esca-specific anomalies accurately.
-
-The model's current architecture and training approach may not be well-suited to distinguish esca-specific anomalies from those of other diseases. Instead, AnomalyGPT may be more adept at broadly identifying "disease" rather than the specific characteristics of esca. In short, the poor performance of AnomalyGPT in this task can be attributed to several factors:
-
-- The model's heavy dependence on accurate pixel-level anomaly maps means that any errors here can significantly degrade performance.
-- The manual and basic creation of ground truth masks likely introduced inconsistencies and inaccuracies.
-- The variability in esca symptoms and their potential overlap with other diseases made it difficult for the model to accurately detect and localize esca-specific anomalies.
-- AnomalyGPT's architecture may be more suited to detecting general disease symptoms rather than the specific indicators of esca, leading to lower precision and AUROC scores.
-
-Improving the localization accuracy, refining the ground truth masks, and possibly modifying the model architecture to better capture the specific characteristics of esca could potentially enhance the model's performance in future iterations.
-
-
 
 
 
